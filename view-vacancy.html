@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Просмотр вакансии — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: center;
+        }
+        .disabled-badge {
+            background: #00FF88;
+            color: #0A0E27;
+            margin-left: 8px;
+        }
+        .word-break {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" id="vacancyContent">
+        <p style="text-align:center; padding:60px; color:#8892B0;">⚡ Загрузка вакансии...</p>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        updateNavigation();
+        initScrollToTop();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // ИСПРАВЛЕНО: получаем ID как строку и сравниваем без преобразования типа
+            const vacancyIdParam = getQueryParam('id');
+            
+            console.log('Получен ID из URL:', vacancyIdParam);
+            
+            if (!vacancyIdParam) {
+                document.getElementById('vacancyContent').innerHTML = '<p class="text-center mt-3" style="color:#FF007F;">❌ Вакансия не найдена (ID не указан)</p>';
+                return;
+            }
+
+            const db = getDB();
+            console.log('Все вакансии в БД:', db.vacancies);
+            
+            // Ищем вакансию, сравнивая как строки (чтобы работало и с числами, и с UUID)
+            let vacancy = null;
+            for (let i = 0; i < db.vacancies.length; i++) {
+                // Преобразуем оба значения к строке для сравнения
+                if (String(db.vacancies[i].id) === String(vacancyIdParam)) {
+                    vacancy = db.vacancies[i];
+                    break;
+                }
+            }
+            
+            console.log('Найденная вакансия:', vacancy);
+            
+            if (!vacancy) {
+                document.getElementById('vacancyContent').innerHTML = `
+                    <div class="glass-card" style="max-width:600px; margin:0 auto; text-align:center;">
+                        <p style="font-size:48px;">🔍</p>
+                        <h3 style="color:#FF007F;">Вакансия не найдена</h3>
+                        <p style="color:#8892B0;">Возможно, она была удалена или ID указан неверно.</p>
+                        <a href="index.html" class="neon-btn mt-2">← Вернуться к вакансиям</a>
+                    </div>
+                `;
+                return;
+            }
+
+            // Счётчик просмотров
+            if (vacancy.views === undefined) vacancy.views = 0;
+            vacancy.views++;
+            saveDB(db);
+
+            const employer = db.users.find(u => u.id === vacancy.employer_id);
+            const currentUser = getCurrentUser();
+            const isEmployer = currentUser && currentUser.role === 'employer';
+            const isOwner = currentUser && currentUser.id === vacancy.employer_id;
+            
+            // Тег для инвалидов
+            const disabledTag = vacancy.disabled_friendly ? '<span class="badge disabled-badge">♿ Подходит для инвалидов</span>' : '';
+
+            // Избранное (ID преобразуем в строку для сравнения)
+            const fav = isFavorite(String(vacancy.id));
+            const favButton = isLoggedIn() && !isEmployer
+                ? `<button id="favBtn" class="neon-btn small" onclick="toggleFavorite('${vacancy.id}')">${fav ? '★ Убрать из избранного' : '☆ Добавить в избранное'}</button>`
+                : '';
+
+            // Кнопка жалобы
+            const reportButton = isLoggedIn() && !isOwner
+                ? `<button onclick="reportVacancy('${vacancy.id}')" class="neon-btn pink small">⚠️ Пожаловаться</button>`
+                : '';
+
+            let actionButton = '';
+            if (!isLoggedIn()) {
+                actionButton = `<a href="login.html" class="neon-btn w-full mt-2">⚡ Войти и откликнуться</a>`;
+            } else if (isOwner) {
+                actionButton = `<p style="color:#8892B0; margin-top:10px; text-align:center;">📌 Это ваша вакансия</p>`;
+                actionButton += `<div class="action-buttons">
+                    <button onclick="deleteVacancy('${vacancy.id}')" class="neon-btn pink small">🗑 Удалить</button>
+                </div>`;
+            } else if (isEmployer) {
+                actionButton = `<p style="color:#8892B0; margin-top:10px; text-align:center;">👔 Вы работодатель — отклик недоступен</p>`;
+            } else {
+    actionButton = `
+        <button onclick="respondToVacancy('${vacancy.id}')" class="neon-btn w-full mt-2">⚡ Откликнуться</button>
+        <button onclick="window.location.href='chat.html?user=${vacancy.employer_id}'" class="neon-btn purple w-full mt-2">💬 Написать работодателю</button>
+    `;
+}
+
+            document.getElementById('vacancyContent').innerHTML = `
+                <div class="glass-card" style="max-width:800px; margin:0 auto; overflow: hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+                        <div style="flex:1; min-width:0;">
+                            <h2 style="color:#E0E7FF; font-size:28px; margin:0; word-break:break-word;">${escapeHtml(vacancy.title)}</h2>
+                            ${disabledTag}
+                        </div>
+                        <span class="badge" style="flex-shrink:0;">${escapeHtml(vacancy.type || 'Полный день')}</span>
+                    </div>
+                    <div class="input-row" style="margin-bottom:24px;">
+                        <div class="dynamic-block"><p style="color:#8892B0;">🏢 Компания</p><p style="color:#E0E7FF; word-break:break-word;">${escapeHtml(vacancy.company)}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">💰 Зарплата</p><p class="salary" style="font-size:20px;">${escapeHtml(vacancy.salary || 'Не указана')}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">📍 Город</p><p style="color:#E0E7FF;">${escapeHtml(vacancy.city || 'Не указан')}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">🕒 Тип занятости</p><p style="color:#E0E7FF;">${escapeHtml(vacancy.type || 'Не указан')}</p></div>
+                    </div>
+                    ${employer ? `<div class="dynamic-block mb-3"><p style="color:#8892B0;">👤 Работодатель</p><p style="color:#E0E7FF; word-break:break-word;">${escapeHtml(employer.name)} ${employer.company ? '(' + escapeHtml(employer.company) + ')' : ''}</p></div>` : ''}
+                    <h3 class="section-title" style="margin-top:24px;">📄 Описание</h3>
+                    <p style="color:#8892B0; line-height:1.6; white-space:pre-wrap; word-break:break-word;">${escapeHtml(vacancy.description || 'Нет описания')}</p>
+                    ${vacancy.requirements ? `<h3 class="section-title" style="margin-top:24px;">📋 Требования</h3><p style="color:#8892B0; white-space:pre-wrap; word-break:break-word;">${escapeHtml(vacancy.requirements)}</p>` : ''}
+                    <p style="color:#8892B0; font-size:12px; margin-top:16px;">👁️ Просмотров: ${vacancy.views} | 📅 Опубликовано: ${new Date(vacancy.created_at).toLocaleDateString('ru-RU')}</p>
+                    <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+                        ${favButton}
+                        ${reportButton}
+                    </div>
+                    ${actionButton}
+                    <div style="margin-top:16px; text-align:center;">
+                        <button onclick="history.back()" class="neon-btn purple small">← Назад</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Исправленная функция toggleFavorite
+        window.toggleFavorite = function(vacancyId) {
+            const idStr = String(vacancyId);
+            if (isFavorite(idStr)) {
+                removeFavorite(idStr);
+            } else {
+                addFavorite(idStr);
+            }
+            const btn = document.getElementById('favBtn');
+            if (btn) {
+                btn.textContent = isFavorite(idStr) ? '★ Убрать из избранного' : '☆ Добавить в избранное';
+            }
+        };
+        
+        // Исправленная функция жалобы
+        window.reportVacancy = function(vacancyId) {
+            const reason = prompt('Укажите причину жалобы (некорректная информация, спам, оскорбления и т.д.):');
+            if (reason && reason.trim()) {
+                addComplaint('vacancy', vacancyId, reason);
+                alert('⚠️ Жалоба отправлена администратору');
+            }
+        };
+        
+        // Исправленная функция удаления
+        window.deleteVacancy = function(vacancyId) {
+            if (confirm('Вы уверены, что хотите удалить эту вакансию? Это действие нельзя отменить.')) {
+                const db = getDB();
+                db.vacancies = db.vacancies.filter(v => String(v.id) !== String(vacancyId));
+                saveDB(db);
+                alert('✅ Вакансия удалена');
+                window.location.href = 'index.html';
+            }
+        };
+        
+        // Исправленная функция отклика (принимает строку)
+        window.respondToVacancy = function(vacancyId) {
+            if (!isLoggedIn()) {
+                alert('Для отклика необходимо войти в систему');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const currentUser = getCurrentUser();
+            if (currentUser && currentUser.role !== 'candidate') {
+                alert('Только соискатели могут откликаться на вакансии');
+                return;
+            }
+
+            const db = getDB();
+            const currentUserFull = db.users.find(u => u.id === currentUser.id);
+            if (currentUserFull && currentUserFull.blocked) {
+                alert('Ваш аккаунт заблокирован. Вы не можете откликаться на вакансии.');
+                return;
+            }
+
+            // Ищем вакансию по строковому ID
+            let vacancy = null;
+            for (let i = 0; i < db.vacancies.length; i++) {
+                if (String(db.vacancies[i].id) === String(vacancyId)) {
+                    vacancy = db.vacancies[i];
+                    break;
+                }
+            }
+
+            if (!vacancy) {
+                alert('Вакансия не найдена');
+                return;
+            }
+
+            if (vacancy.employer_id === currentUser.id) {
+                alert('Вы не можете откликнуться на свою вакансию');
+                return;
+            }
+
+            // Проверяем существующий отклик
+            const existing = db.responses.find(r =>
+                String(r.vacancy_id) === String(vacancyId) && r.candidate_id === currentUser.id
+            );
+
+            if (existing) {
+                alert('Вы уже откликались на эту вакансию');
+                return;
+            }
+
+            const newResponse = {
+                id: generateId(),
+                vacancy_id: vacancyId,
+                candidate_id: currentUser.id,
+                status: 'Новый',
+                created_at: new Date().toISOString()
+            };
+            db.responses.push(newResponse);
+            saveDB(db);
+
+            if (typeof addNotification !== 'undefined') {
+                addNotification(vacancy.employer_id, `📬 Новый отклик на вакансию "${vacancy.title}" от ${currentUser.name}`, 'response');
+            }
+            
+            alert('✅ Отклик успешно отправлен!');
+        };
+        
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

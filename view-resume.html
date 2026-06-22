@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Просмотр резюме — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        .rating-stars {
+            display: inline-flex;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .star {
+            color: #FFD700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .star:hover {
+            transform: scale(1.1);
+        }
+        .candidate-rating {
+            background: rgba(0,240,255,0.1);
+            border-radius: 20px;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .blacklisted-badge {
+            background: #FF007F;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .review-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .review-rating {
+            color: #FFD700;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .modal-content {
+            max-width: 450px;
+            width: 90%;
+        }
+        .word-break {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" id="resumeContent">
+        <p style="text-align:center; padding:60px; color:#8892B0;">⚡ Загрузка резюме...</p>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        updateNavigation();
+        initScrollToTop();
+        updateNotificationBadge();
+
+        let currentResume = null;
+        let currentCandidate = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // ИСПРАВЛЕНО: получаем ID как строку (декодируем из URL)
+            const resumeIdParam = decodeURIComponent(getQueryParam('id') || '');
+            const candidateIdParam = getQueryParam('candidate_id');
+            let resume = null;
+            const db = getDB();
+
+            console.log('ID резюме из URL (декодированный):', resumeIdParam);
+            console.log('Все резюме в БД:', db.resumes.map(r => ({id: r.id, title: r.title})));
+
+            if (resumeIdParam) {
+                // Ищем по строковому ID (без parseInt)
+                resume = db.resumes.find(r => String(r.id) === String(resumeIdParam));
+                console.log('Найденное резюме по ID:', resume);
+            } else if (candidateIdParam) {
+                const candidateResumes = db.resumes.filter(r => r.candidate_id == candidateIdParam && r.is_active !== false);
+                if (candidateResumes.length > 0) {
+                    resume = candidateResumes.reduce((latest, r) => (new Date(r.updated_at) > new Date(latest.updated_at) ? r : latest));
+                }
+            }
+
+            if (!resume) {
+                document.getElementById('resumeContent').innerHTML = `
+                    <div class="glass-card" style="max-width:600px; margin:0 auto; text-align:center;">
+                        <p style="font-size:48px;">🔍</p>
+                        <h3 style="color:#FF007F;">Резюме не найдено</h3>
+                        <p style="color:#8892B0;">Возможно, оно было удалено или ID указан неверно.</p>
+                        <a href="my-resumes.html" class="neon-btn mt-2">← Вернуться к моим резюме</a>
+                    </div>
+                `;
+                return;
+            }
+
+            currentResume = resume;
+            
+            if (resume.views === undefined) resume.views = 0;
+            resume.views++;
+            saveDB(db);
+
+            const candidate = db.users.find(u => u.id === resume.candidate_id);
+            currentCandidate = candidate;
+            
+            const defaultAvatar = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23141852%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%2300F0FF%22 x=%2250%22 y=%2260%22 text-anchor=%22middle%22 font-size=%2235%22%3E👤%3C/text%3E%3C/svg%3E';
+            
+            const avgRating = getCandidateAverageRating(candidate.id);
+            const ratingHtml = avgRating ? `<span class="candidate-rating">⭐ ${avgRating} / 5</span>` : '';
+            
+            const isBlacklisted = isInBlacklist ? isInBlacklist(candidate.id) : false;
+            const blacklistHtml = isBlacklisted ? '<span class="blacklisted-badge">🚫 В чёрном списке</span>' : '';
+            
+            const currentUser = getCurrentUser();
+            const isEmployer = currentUser && currentUser.role === 'employer';
+            const isOwner = currentUser && currentUser.id === candidate.id;
+            
+            // Если владелец резюме – показываем кнопку "Редактировать"
+            let ownerButtons = '';
+            if (isOwner) {
+                ownerButtons = `
+                    <div class="action-buttons">
+                        <a href="edit-resume.html?id=${encodeURIComponent(resume.id)}" class="neon-btn purple">✏️ Редактировать</a>
+                        <button onclick="deleteMyResume('${resume.id}')" class="neon-btn pink">🗑️ Удалить</button>
+                    </div>
+                `;
+            }
+            
+            let actionButtons = '';
+            
+            if (isEmployer && !isOwner) {
+                actionButtons = `
+                    <div class="action-buttons">
+                        <button onclick="window.location.href='chat.html?user=${candidate.id}'" class="neon-btn">💬 Написать соискателю</button>
+                        <button onclick="showInviteModal()" class="neon-btn purple">✉️ Пригласить на собеседование</button>
+                        <button onclick="showReviewModal()" class="neon-btn">⭐ Оценить кандидата</button>
+                        <button onclick="toggleBlacklist(${candidate.id})" class="neon-btn ${isBlacklisted ? 'pink' : ''}" id="blacklistBtn">
+                            ${isBlacklisted ? '🚫 Убрать из чёрного списка' : '⚠️ В чёрный список'}
+                        </button>
+                        <button onclick="reportResume(${resume.id})" class="neon-btn pink small">⚠️ Пожаловаться</button>
+                    </div>
+                `;
+            } else if (!isOwner && currentUser && currentUser.role === 'candidate') {
+                actionButtons = `
+                    <div class="action-buttons">
+                        <button onclick="window.location.href='chat.html?user=${candidate.id}'" class="neon-btn purple">💬 Написать сообщение</button>
+                    </div>
+                `;
+            }
+            
+            let reviewsHtml = '';
+            if (isEmployer) {
+                const reviews = getCandidateReviews(candidate.id);
+                if (reviews.length > 0) {
+                    reviewsHtml = `
+                        <h3 class="section-title">📝 Отзывы о кандидате</h3>
+                        ${reviews.map(r => {
+                            const employer = db.users.find(u => u.id === r.employer_id);
+                            return `
+                                <div class="review-card">
+                                    <div class="review-rating">${'⭐'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                                    <p style="color:#E0E7FF;">${escapeHtml(r.comment || 'Без комментария')}</p>
+                                    <p style="color:#8892B0; font-size:12px;">— ${escapeHtml(employer?.name || 'Работодатель')}, ${getRelativeTime(r.created_at)}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                    `;
+                }
+            }
+
+            document.getElementById('resumeContent').innerHTML = `
+                <div class="glass-card" style="max-width:800px; margin:0 auto;">
+                    <div class="text-center mb-3">
+                        <img src="${candidate?.avatar_url || defaultAvatar}" alt="Аватар" style="width:100px; height:100px; border-radius:50%; border:3px solid #00F0FF; object-fit:cover; box-shadow:0 0 15px rgba(0,240,255,0.4);">
+                        <h2 style="color:#E0E7FF; font-size:28px;">${escapeHtml(candidate?.name || 'Пользователь')} ${ratingHtml} ${blacklistHtml}</h2>
+                        <p style="color:#00F0FF; font-size:20px;">${escapeHtml(resume.desired_position)}</p>
+                        <p style="color:#8892B0;">${escapeHtml(resume.title)}</p>
+                    </div>
+                    
+                    <h3 class="section-title">📋 Основная информация</h3>
+                    <div class="input-row">
+                        <div class="dynamic-block"><p style="color:#8892B0;">Зарплата</p><p style="color:#E0E7FF;">${formatSalary(resume.salary_from, resume.salary_to)}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">Тип занятости</p><p style="color:#E0E7FF;">${escapeHtml(resume.employment_type)}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">График</p><p style="color:#E0E7FF;">${escapeHtml(resume.work_schedule)}</p></div>
+                        <div class="dynamic-block"><p style="color:#8892B0;">Город</p><p style="color:#E0E7FF;">📍 ${escapeHtml(resume.city || 'Не указан')}</p></div>
+                    </div>
+                    ${resume.portfolio_url ? `<p class="mt-2 word-break"><span style="color:#8892B0;">🔗 Портфолио:</span> <a href="${escapeHtml(resume.portfolio_url)}" target="_blank" style="color:#00F0FF;">${escapeHtml(resume.portfolio_url)}</a></p>` : ''}
+                    
+                    <h3 class="section-title">💡 Навыки</h3>
+                    <div>${(resume.skills || []).map(s => `<span class="badge">${escapeHtml(s)}</span>`).join(' ')}</div>
+                    
+                    <h3 class="section-title">🌐 Языки</h3>
+                    <div>${(resume.languages || []).map(l => `<span class="badge">${escapeHtml(l.name)} — ${escapeHtml(l.level)}</span>`).join(' ')}</div>
+                    
+                    <h3 class="section-title">💼 Опыт работы</h3>
+                    ${(resume.experience || []).length > 0 ? resume.experience.map(exp => `
+                        <div class="timeline-item">
+                            <h4 style="color:#E0E7FF;">${escapeHtml(exp.position)}</h4>
+                            <p style="color:#00F0FF;">${escapeHtml(exp.company)}</p>
+                            <p style="color:#8892B0;">${escapeHtml(exp.start_date)} — ${escapeHtml(exp.end_date || 'наст. время')}</p>
+                            <p style="color:#8892B0;">${escapeHtml(exp.description || '')}</p>
+                        </div>
+                    `).join('') : '<p style="color:#8892B0;">Не указан</p>'}
+                    
+                    <h3 class="section-title">🎓 Образование</h3>
+                    ${(resume.education || []).length > 0 ? resume.education.map(edu => `
+                        <div class="dynamic-block">
+                            <p style="color:#E0E7FF;">${escapeHtml(edu.institution)}</p>
+                            <p style="color:#8892B0;">${escapeHtml(edu.specialty)} • ${escapeHtml(edu.year)}</p>
+                        </div>
+                    `).join('') : '<p style="color:#8892B0;">Не указано</p>'}
+                    
+                    ${resume.about_me ? `<h3 class="section-title">✍️ О себе</h3><p style="color:#8892B0; word-break:break-word;">${escapeHtml(resume.about_me)}</p>` : ''}
+                    
+                    ${reviewsHtml}
+                    
+                    <p style="color:#8892B0; font-size:12px; margin-top:16px;">👁️ Просмотров: ${resume.views} | 📅 Обновлено: ${getRelativeTime(resume.updated_at)}</p>
+                    
+                    ${ownerButtons}
+                    ${actionButtons}
+                    
+                    <div class="action-buttons">
+                        <button onclick="exportResumeToPDF()" class="neon-btn purple small">📄 Сохранить в PDF</button>
+                        <button onclick="history.back()" class="neon-btn small">← Назад</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // === ФУНКЦИЯ УДАЛЕНИЯ ДЛЯ ВЛАДЕЛЬЦА ===
+        window.deleteMyResume = function(id) {
+            if (!confirm('Вы уверены, что хотите удалить это резюме? Это действие нельзя отменить.')) return;
+            const db = getDB();
+            db.resumes = db.resumes.filter(r => String(r.id) !== String(id));
+            saveDB(db);
+            alert('✅ Резюме удалено');
+            window.location.href = 'my-resumes.html';
+        };
+        
+        function exportResumeToPDF() {
+            const element = document.querySelector('.glass-card');
+            if (element) {
+                html2pdf().set({
+                    margin: [10, 10, 10, 10],
+                    filename: `resume_${currentResume?.title || 'resume'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, letterRendering: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).save();
+            } else {
+                alert('Не удалось создать PDF');
+            }
+        }
+        
+        window.showInviteModal = function() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="glass-card modal-content">
+                    <h3 style="color:#00F0FF; margin-bottom:16px;">✉️ Приглашение на собеседование</h3>
+                    <textarea id="inviteMessage" class="neon-textarea" rows="4" placeholder="Укажите дату, время, формат собеседования (онлайн/офлайн), ссылку для связи..."></textarea>
+                    <div style="display:flex; gap:12px; margin-top:16px;">
+                        <button onclick="sendInvitation()" class="neon-btn" style="flex:1;">📨 Отправить</button>
+                        <button onclick="this.closest('.modal-overlay').remove()" class="neon-btn purple" style="flex:1;">Отмена</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        };
+        
+        window.sendInvitation = function() {
+            const message = document.getElementById('inviteMessage')?.value.trim();
+            if (!message) {
+                alert('Введите текст приглашения');
+                return;
+            }
+            const currentUser = getCurrentUser();
+            if (!currentUser || currentUser.role !== 'employer') {
+                alert('Только работодатели могут отправлять приглашения');
+                return;
+            }
+            createInvitation(currentUser.id, currentCandidate.id, currentResume.id, null, message);
+            document.querySelector('.modal-overlay')?.remove();
+            alert('✅ Приглашение отправлено кандидату');
+        };
+        
+        window.showReviewModal = function() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="glass-card modal-content">
+                    <h3 style="color:#00F0FF; margin-bottom:16px;">⭐ Оценка кандидата</h3>
+                    <div style="text-align:center; margin-bottom:16px;">
+                        <div id="ratingStars" style="display:flex; gap:8px; justify-content:center;">
+                            ${[1,2,3,4,5].map(i => `<span class="star" data-rating="${i}" onclick="setRating(${i})">☆</span>`).join('')}
+                        </div>
+                        <input type="hidden" id="selectedRating" value="0">
+                    </div>
+                    <textarea id="reviewComment" class="neon-textarea" rows="3" placeholder="Ваш отзыв о кандидате (необязательно)"></textarea>
+                    <div style="display:flex; gap:12px; margin-top:16px;">
+                        <button onclick="submitReview()" class="neon-btn" style="flex:1;">📝 Отправить</button>
+                        <button onclick="this.closest('.modal-overlay').remove()" class="neon-btn purple" style="flex:1;">Отмена</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const stars = modal.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    stars.forEach((s, idx) => {
+                        s.textContent = idx < rating ? '★' : '☆';
+                    });
+                });
+                star.addEventListener('mouseout', function() {
+                    const current = parseInt(document.getElementById('selectedRating').value);
+                    stars.forEach((s, idx) => {
+                        s.textContent = idx < current ? '★' : '☆';
+                    });
+                });
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    document.getElementById('selectedRating').value = rating;
+                    stars.forEach((s, idx) => {
+                        s.textContent = idx < rating ? '★' : '☆';
+                    });
+                });
+            });
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        };
+        
+        window.setRating = function(rating) {
+            document.getElementById('selectedRating').value = rating;
+            const stars = document.querySelectorAll('#ratingStars .star');
+            stars.forEach((s, idx) => {
+                s.textContent = idx < rating ? '★' : '☆';
+            });
+        };
+        
+        window.submitReview = function() {
+            const rating = parseInt(document.getElementById('selectedRating')?.value || 0);
+            if (rating < 1 || rating > 5) {
+                alert('Поставьте оценку от 1 до 5');
+                return;
+            }
+            const comment = document.getElementById('reviewComment')?.value.trim() || '';
+            addCandidateReview(currentCandidate.id, null, rating, comment);
+            document.querySelector('.modal-overlay')?.remove();
+            location.reload();
+        };
+        
+        window.toggleBlacklist = function(candidateId) {
+            if (isInBlacklist(candidateId)) {
+                removeFromBlacklist(candidateId);
+                showToast('✅ Кандидат удалён из чёрного списка');
+                const btn = document.getElementById('blacklistBtn');
+                if (btn) {
+                    btn.textContent = '⚠️ В чёрный список';
+                    btn.classList.remove('pink');
+                }
+            } else {
+                addToBlacklist(candidateId);
+                showToast('🚫 Кандидат добавлен в чёрный список');
+                const btn = document.getElementById('blacklistBtn');
+                if (btn) {
+                    btn.textContent = '🚫 Убрать из чёрного списка';
+                    btn.classList.add('pink');
+                }
+            }
+        };
+        
+        window.reportResume = function(resumeId) {
+            const reason = prompt('Укажите причину жалобы (некорректная информация, спам, оскорбления и т.д.):');
+            if (reason && reason.trim()) {
+                addComplaint('resume', resumeId, reason);
+                alert('⚠️ Жалоба отправлена администратору');
+            }
+        };
+        
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    background: linear-gradient(135deg, #00F0FF, #B900FF);
+                    color: #0A0E27;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    z-index: 10001;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    box-shadow: 0 0 20px rgba(0,240,255,0.5);
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+        
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>
