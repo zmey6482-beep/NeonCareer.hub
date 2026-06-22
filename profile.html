@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Профиль — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        /* Стили для онбординг-модалки */
+        .onboarding-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        .onboarding-content {
+            max-width: 500px;
+            width: 90%;
+            animation: fadeInUp 0.3s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .onboarding-step {
+            text-align: center;
+        }
+        .onboarding-step-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .onboarding-step h3 {
+            color: #00F0FF;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .onboarding-step p {
+            color: #8892B0;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .onboarding-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #8892B0;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dot.active {
+            background: #00F0FF;
+            width: 20px;
+            border-radius: 4px;
+        }
+        .onboarding-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        
+        /* Прогресс-бар профиля */
+        .profile-completion {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .completion-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .completion-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Уведомления */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -12px;
+            background: #FF007F;
+            color: white;
+            font-size: 10px;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" id="profileContent">
+        <p style="text-align:center; padding:40px; color:#8892B0;">Загрузка профиля…</p>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (window.location.href.indexOf('nocache') === -1) {
+            window.location.search += '&nocache=' + Date.now();
+        }
+
+        if (!isLoggedIn()) { window.location.href = 'login.html'; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateNavigation();
+            renderProfile();
+            updateNotificationBadge();
+            checkAndShowOnboarding();  // ← ОНБОРДИНГ
+        });
+
+        const defaultAvatar = 'data:image/svg+xml,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+                <rect fill="#141852" width="120" height="120"/>
+                <circle cx="60" cy="45" r="20" fill="#00F0FF" opacity="0.3"/>
+                <circle cx="60" cy="40" r="14" fill="#00F0FF" opacity="0.5"/>
+                <ellipse cx="60" cy="90" rx="30" ry="20" fill="#00F0FF" opacity="0.2"/>
+                <text fill="#00F0FF" x="60" y="100" text-anchor="middle" font-size="50" font-family="Arial">👤</text>
+            </svg>`);
+
+        // ============ ПРОГРЕСС-БАР ЗАПОЛНЕНИЯ ПРОФИЛЯ ============
+        function calculateProfileCompletion(user) {
+            let total = 0;
+            let filled = 0;
+            
+            // Аватарка
+            total++;
+            if (user.avatar_url && user.avatar_url !== '') filled++;
+            
+            // Баннер
+            total++;
+            if (user.banner_url && user.banner_url !== '') filled++;
+            
+            // Имя
+            total++;
+            if (user.name && user.name.trim().length > 0) filled++;
+            
+            if (user.role === 'employer') {
+                // Компания
+                total++;
+                if (user.company && user.company.trim().length > 0) filled++;
+                // Описание компании
+                total++;
+                if (user.company_description && user.company_description.trim().length > 20) filled++;
+            } else {
+                // Специализация
+                total++;
+                if (user.specialization && user.specialization.trim().length > 0) filled++;
+                // О себе
+                total++;
+                if (user.bio && user.bio.trim().length > 20) filled++;
+            }
+            
+            const percent = Math.round((filled / total) * 100);
+            return { percent, filled, total };
+        }
+        
+        function renderProfileCompletion(user) {
+            const { percent, filled, total } = calculateProfileCompletion(user);
+            const isEmployer = user.role === 'employer';
+            
+            let tips = '';
+            if (percent < 30) tips = '💡 Заполните профиль, чтобы получать больше предложений!';
+            else if (percent < 60) tips = '📝 Вы на полпути! Добавьте фото и подробную информацию.';
+            else if (percent < 90) tips = '🎉 Отлично! Осталось совсем немного.';
+            else tips = '🏆 Идеальный профиль! Вы готовы к поиску.';
+            
+            return `
+                <div class="profile-completion">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color:#E0E7FF;">📊 Заполнение профиля</span>
+                        <span style="color:#00F0FF;">${percent}% (${filled}/${total})</span>
+                    </div>
+                    <div class="completion-bar">
+                        <div class="completion-fill" style="width: ${percent}%;"></div>
+                    </div>
+                    <p style="font-size:12px; color:#8892B0; margin-top:8px;">${tips}</p>
+                </div>
+            `;
+        }
+
+        // ============ ОНБОРДИНГ (МОДАЛЬНОЕ ОКНО) ============
+        function showOnboarding() {
+            const user = getCurrentUser();
+            const isEmployer = user && user.role === 'employer';
+            
+            const steps = isEmployer ? [
+                { icon: "🏢", title: "Добро пожаловать, работодатель!", text: "NeonCareer hub поможет вам найти лучших сотрудников." },
+                { icon: "➕", title: "Публикация вакансий", text: "Нажмите «+ Создать вакансию» в навигации или на главной странице." },
+                { icon: "📬", title: "Управление откликами", text: "В разделе «Отклики» вы можете просматривать и изменять статусы кандидатов." },
+                { icon: "📊", title: "Аналитика", text: "Перейдите в «Статистику», чтобы увидеть конверсию и динамику откликов." },
+                { icon: "🎨", title: "Настройка профиля", text: "Загрузите логотип компании и баннер, чтобы выглядеть профессионально." }
+            ] : [
+                { icon: "👋", title: "Добро пожаловать!", text: "Вы успешно зарегистрировались на портале NeonCareer hub!" },
+                { icon: "📄", title: "Создание резюме", text: "Перейдите в «Мои резюме» → «+ Создать» и заполните информацию о себе." },
+                { icon: "🔍", title: "Поиск вакансий", text: "На главной странице вы можете фильтровать вакансии по городу, зарплате и типу занятости." },
+                { icon: "⚡", title: "Отклик на вакансии", text: "Нажмите «Откликнуться» на заинтересовавшей вас вакансии." },
+                { icon: "💬", title: "Общение", text: "Используйте чат для связи с работодателями." }
+            ];
+            
+            let currentStep = 0;
+            
+            const modal = document.createElement('div');
+            modal.className = 'onboarding-modal';
+            
+            function renderStep() {
+                const step = steps[currentStep];
+                modal.innerHTML = `
+                    <div class="glass-card onboarding-content">
+                        <div class="onboarding-step">
+                            <div class="onboarding-step-icon">${step.icon}</div>
+                            <h3>${step.title}</h3>
+                            <p>${step.text}</p>
+                            <div class="onboarding-dots">
+                                ${steps.map((_, idx) => `<div class="dot ${idx === currentStep ? 'active' : ''}" data-step="${idx}"></div>`).join('')}
+                            </div>
+                            <div class="onboarding-buttons">
+                                ${currentStep > 0 ? '<button class="neon-btn small" id="prevBtn">← Назад</button>' : ''}
+                                <button class="neon-btn" id="nextBtn">${currentStep === steps.length - 1 ? '🚀 Начать' : 'Далее →'}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Обработчики для точек
+                modal.querySelectorAll('.dot').forEach(dot => {
+                    dot.addEventListener('click', (e) => {
+                        currentStep = parseInt(e.target.dataset.step);
+                        renderStep();
+                    });
+                });
+                
+                // Кнопка "Назад"
+                const prevBtn = modal.querySelector('#prevBtn');
+                if (prevBtn) {
+                    prevBtn.addEventListener('click', () => {
+                        if (currentStep > 0) {
+                            currentStep--;
+                            renderStep();
+                        }
+                    });
+                }
+                
+                // Кнопка "Далее / Начать"
+                const nextBtn = modal.querySelector('#nextBtn');
+                nextBtn.addEventListener('click', () => {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        renderStep();
+                    } else {
+                        modal.remove();
+                        // Сохраняем, что онбординг показан
+                        localStorage.setItem('onboarding_shown', 'true');
+                    }
+                });
+            }
+            
+            renderStep();
+            document.body.appendChild(modal);
+        }
+        
+        function checkAndShowOnboarding() {
+            // Показываем онбординг, если это новый пользователь (флаг just_registered)
+            if (localStorage.getItem('just_registered') === 'true') {
+                localStorage.removeItem('just_registered');
+                setTimeout(() => showOnboarding(), 500);
+            }
+        }
+
+        // ============ ОСНОВНОЙ РЕНДЕР ПРОФИЛЯ ============
+        function renderProfile() {
+            const db = getDB();
+            const currentUserId = getCurrentUserId();
+            if (!currentUserId) { logout(); return; }
+            const user = db.users.find(u => u.id === currentUserId);
+            if (!user) { alert('Пользователь не найден'); logout(); return; }
+            const isEmployer = (user.role === 'employer');
+
+            const specializationLine = isEmployer
+                ? (user.company || 'Название компании не указано')
+                : (user.specialization || 'Специализация не указана');
+            const bioLine = isEmployer
+                ? (user.company_description || 'Описание компании отсутствует')
+                : (user.bio || 'Информация о себе отсутствует');
+
+            // Статистика
+            let statsHtml = '';
+            if (isEmployer) {
+                const myVacancies = db.vacancies.filter(v => v.employer_id === user.id);
+                const myVacancyIds = myVacancies.map(v => v.id);
+                const respCount = db.responses.filter(r => myVacancyIds.includes(r.vacancy_id)).length;
+                const totalViews = myVacancies.reduce((sum, v) => sum + (v.views || 0), 0);
+                statsHtml = `
+                    <div class="text-center"><div class="stat-number">${myVacancies.length}</div><div class="stat-label">Вакансий</div></div>
+                    <div class="text-center"><div class="stat-number">${respCount}</div><div class="stat-label">Откликов</div></div>
+                    <div class="text-center"><div class="stat-number">${totalViews}</div><div class="stat-label">Просмотров</div></div>
+                `;
+            } else {
+                const myResumes = db.resumes.filter(r => r.candidate_id === user.id);
+                const myResponses = db.responses.filter(r => r.candidate_id === user.id);
+                const avgRating = getCandidateAverageRating ? getCandidateAverageRating(user.id) : null;
+                statsHtml = `
+                    <div class="text-center"><div class="stat-number">${myResumes.length}</div><div class="stat-label">Резюме</div></div>
+                    <div class="text-center"><div class="stat-number">${myResponses.length}</div><div class="stat-label">Откликов</div></div>
+                    ${avgRating ? `<div class="text-center"><div class="stat-number">⭐ ${avgRating}</div><div class="stat-label">Рейтинг</div></div>` : ''}
+                `;
+            }
+
+            // Кнопки действий
+            const buttonsHtml = isEmployer
+                ? `<a href="create-vacancy.html" class="neon-btn">+ Вакансия</a>
+                   <a href="employer-responses.html" class="neon-btn purple">📬 Отклики</a>
+                   <a href="employer-stats.html" class="neon-btn purple">📊 Статистика</a>`
+                : `<a href="my-resumes.html" class="neon-btn purple">📝 Мои резюме</a>
+                   <a href="create-resume.html" class="neon-btn">+ Новое резюме</a>`;
+
+            // Список вакансий / резюме
+            let itemsListHtml = '';
+            if (isEmployer) {
+                const myVacancies = db.vacancies.filter(v => v.employer_id === user.id);
+                if (myVacancies.length > 0) {
+                    itemsListHtml = `
+                        <div class="glass-card mt-3" style="max-width:800px; margin:24px auto;">
+                            <h3 style="color:#00F0FF; margin-bottom:16px;">📋 Мои вакансии</h3>
+                            ${myVacancies.map(v => `
+                                <div class="dynamic-block" style="margin-bottom:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                        <div>
+                                            <strong style="color:#E0E7FF;">
+                                                <a href="view-vacancy.html?id=${v.id}" style="color:#00F0FF; text-decoration:none;">${escapeHtml(v.title)}</a>
+                                            </strong>
+                                            <span class="badge ${v.is_active ? '' : 'purple'}">${v.is_active ? 'Активна' : 'Скрыта'}</span>
+                                            ${v.disabled_friendly ? '<span class="badge" style="background:#00FF88;">♿ Инвалидам</span>' : ''}
+                                            <p style="color:#8892B0; font-size:14px;">${escapeHtml(v.company)} • ${escapeHtml(v.city || '—')} • 👁️ ${v.views || 0}</p>
+                                        </div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button class="neon-btn small" onclick="toggleVacancy(${v.id})">${v.is_active ? 'Скрыть' : 'Показать'}</button>
+                                            <button class="neon-btn pink small" onclick="deleteVacancy(${v.id})">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+            } else {
+                const myResumes = db.resumes.filter(r => r.candidate_id === user.id);
+                if (myResumes.length > 0) {
+                    itemsListHtml = `
+                        <div class="glass-card mt-3" style="max-width:800px; margin:24px auto;">
+                            <h3 style="color:#00F0FF; margin-bottom:16px;">📝 Мои резюме</h3>
+                            ${myResumes.map(r => `
+                                <div class="dynamic-block" style="margin-bottom:8px;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                        <div>
+                                            <strong style="color:#E0E7FF;">${escapeHtml(r.title)}</strong>
+                                            <span class="badge ${r.is_active ? '' : 'purple'}">${r.is_active ? 'Активно' : 'Скрыто'}</span>
+                                            <p style="color:#8892B0; font-size:14px;">${escapeHtml(r.desired_position)} • ${escapeHtml(r.city || '—')} • 👁️ ${r.views || 0}</p>
+                                        </div>
+                                        <div style="display:flex; gap:8px;">
+                                            <a href="view-resume.html?id=${r.id}" class="neon-btn small">👁️</a>
+                                            <button class="neon-btn purple small" onclick="toggleResume(${r.id})">${r.is_active ? 'Скрыть' : 'Показать'}</button>
+                                            <button class="neon-btn pink small" onclick="deleteResume(${r.id})">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                // Список откликов соискателя
+                const myResponses = db.responses.filter(r => r.candidate_id === user.id);
+                if (myResponses.length > 0) {
+                    itemsListHtml += `
+                        <div class="glass-card mt-3" style="max-width:800px; margin:24px auto;">
+                            <h3 style="color:#00F0FF; margin-bottom:16px;">📬 Мои отклики</h3>
+                            ${myResponses.map(resp => {
+                                const vacancy = db.vacancies.find(v => v.id === resp.vacancy_id);
+                                const status = resp.status || 'Новый';
+                                const statusColor = status === 'Принят' ? '#00F0FF' :
+                                                    status === 'На рассмотрении' ? '#FFD700' :
+                                                    status === 'Отказ' ? '#FF007F' : '#8892B0';
+                                return `
+                                    <div class="dynamic-block" style="margin-bottom:8px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                            <div>
+                                                <strong style="color:#E0E7FF;">${escapeHtml(vacancy?.title || 'Вакансия удалена')}</strong>
+                                                <p style="color:#8892B0; font-size:14px;">${escapeHtml(vacancy?.company || '—')}</p>
+                                            </div>
+                                            <span style="color:${statusColor}; font-weight:bold;">${status}</span>
+                                        </div>
+                                        <p style="color:#8892B0; font-size:12px;">${getRelativeTime(resp.created_at)}</p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>`;
+                }
+            }
+
+            // Прогресс-бар заполнения профиля
+            const completionHtml = renderProfileCompletion(user);
+
+            document.getElementById('profileContent').innerHTML = `
+                <div class="glass-card profile-header">
+                    <div class="banner-section">
+                        ${user.banner_url ? `<img src="${user.banner_url}" alt="Баннер">` : '<div style="height:100%; background:linear-gradient(135deg,#00F0FF,#B900FF);"></div>'}
+                        <label class="banner-upload-label">
+                            🖼️ Изменить баннер <input type="file" accept="image/*" onchange="uploadBanner(event)" hidden>
+                        </label>
+                        <div class="avatar-section">
+                            <img src="${user.avatar_url || defaultAvatar}" alt="Аватар" id="avatarImg">
+                            <label class="avatar-upload-label" title="Сменить аватарку">📷
+                                <input type="file" accept="image/*" onchange="uploadAvatar(event)" hidden>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        ${completionHtml}
+                        <h1 style="font-size:32px; color:#E0E7FF;">${escapeHtml(user.name)}</h1>
+                        <p style="color:#00F0FF; font-size:18px; margin-top:4px;">${escapeHtml(specializationLine)}</p>
+                        <p style="color:#8892B0; margin-top:12px; line-height:1.6;">${escapeHtml(bioLine)}</p>
+                        <div style="margin-top:16px; display:flex; gap:24px; flex-wrap:wrap;">
+                            <div><span style="color:#8892B0; font-size:12px;">Email</span><br>📧 ${escapeHtml(user.email)}</div>
+                            <div><span style="color:#8892B0; font-size:12px;">Роль</span><br>${isEmployer ? '🏢 Работодатель' : '👨‍💻 Соискатель'}</div>
+                            <div><span style="color:#8892B0; font-size:12px;">На сайте с</span><br>🗓️ ${new Date(user.created_at).toLocaleDateString('ru-RU')}</div>
+                        </div>
+                        <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+                            <button class="neon-btn" onclick="editProfile()">✏️ Редактировать</button>
+                            ${buttonsHtml}
+                            <button class="neon-btn purple" onclick="showOnboarding()">❓ Помощь</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card mt-3" style="max-width:600px; margin:24px auto;">
+                    <h3 style="color:#00F0FF; margin-bottom:16px;">📊 Статистика</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px,1fr)); gap:16px;">${statsHtml}</div>
+                </div>
+                ${itemsListHtml}
+            `;
+        }
+
+        // ============ УПРАВЛЕНИЕ ВАКАНСИЯМИ И РЕЗЮМЕ ============
+        window.toggleVacancy = function(id) {
+            const db = getDB();
+            const vac = db.vacancies.find(v => v.id === id);
+            if (vac) { vac.is_active = !vac.is_active; saveDB(db); renderProfile(); }
+        };
+        window.deleteVacancy = function(id) {
+            if (confirm('Удалить вакансию?')) {
+                const db = getDB();
+                db.vacancies = db.vacancies.filter(v => v.id !== id);
+                saveDB(db);
+                renderProfile();
+            }
+        };
+        window.toggleResume = function(id) {
+            const db = getDB();
+            const res = db.resumes.find(r => r.id === id);
+            if (res) { res.is_active = !res.is_active; res.updated_at = new Date().toISOString(); saveDB(db); renderProfile(); }
+        };
+        window.deleteResume = function(id) {
+            if (confirm('Удалить резюме?')) {
+                const db = getDB();
+                db.resumes = db.resumes.filter(r => r.id !== id);
+                saveDB(db);
+                renderProfile();
+            }
+        };
+
+        // ============ РЕДАКТИРОВАНИЕ ПРОФИЛЯ ============
+        window.editProfile = function () {
+            const db = getDB();
+            const user = db.users.find(u => u.id === getCurrentUserId());
+            if (!user) return;
+            const isEmployer = (user.role === 'employer');
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:1000; padding:20px;';
+            modal.innerHTML = `
+                <div class="glass-card" style="width:100%; max-width:500px;">
+                    <h3 style="color:#00F0FF; font-size:24px; margin-bottom:16px;">✏️ Редактирование профиля</h3>
+                    <form id="editProfileForm">
+                        <label style="color:#8892B0;">Имя</label>
+                        <input type="text" id="editName" class="neon-input" value="${escapeHtml(user.name)}" required>
+                        <label style="color:#8892B0;">${isEmployer ? 'Компания' : 'Специализация'}</label>
+                        <input type="text" id="editSpec" class="neon-input" value="${escapeHtml(isEmployer ? (user.company || '') : (user.specialization || ''))}">
+                        <label style="color:#8892B0;">${isEmployer ? 'О компании' : 'О себе'}</label>
+                        <textarea id="editBio" class="neon-textarea" rows="4">${escapeHtml(isEmployer ? (user.company_description || '') : (user.bio || ''))}</textarea>
+                        <div style="display:flex; gap:12px; margin-top:16px;">
+                            <button type="submit" class="neon-btn" style="flex:1;">💾 Сохранить</button>
+                            <button type="button" class="neon-btn purple" style="flex:1;" onclick="this.closest('[style*=fixed]').remove()">Отмена</button>
+                        </div>
+                    </form>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            document.getElementById('editProfileForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const db = getDB();
+                const idx = db.users.findIndex(u => u.id === getCurrentUserId());
+                if (idx === -1) return;
+                const newName = document.getElementById('editName').value.trim();
+                const newSpec = document.getElementById('editSpec').value.trim();
+                const newBio = document.getElementById('editBio').value.trim();
+                db.users[idx].name = newName;
+                if (isEmployer) {
+                    db.users[idx].company = newSpec;
+                    db.users[idx].company_description = newBio;
+                } else {
+                    db.users[idx].specialization = newSpec;
+                    db.users[idx].bio = newBio;
+                }
+                saveDB(db);
+                setCurrentUser({ id: db.users[idx].id, email: db.users[idx].email, name: db.users[idx].name, role: db.users[idx].role });
+                modal.remove();
+                renderProfile();
+            });
+        };
+
+        // ============ ЗАГРУЗКА АВАТАРКИ И БАННЕРА ============
+        window.uploadAvatar = function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { alert('Файл слишком большой (макс. 2 МБ)'); return; }
+            if (!file.type.startsWith('image/')) { alert('Только изображения'); return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const db = getDB();
+                const user = db.users.find(u => u.id === getCurrentUserId());
+                if (user) { user.avatar_url = e.target.result; saveDB(db); renderProfile(); }
+            };
+            reader.onerror = () => alert('Ошибка чтения файла');
+            reader.readAsDataURL(file);
+        };
+        window.uploadBanner = function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой (макс. 5 МБ)'); return; }
+            if (!file.type.startsWith('image/')) { alert('Только изображения'); return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const db = getDB();
+                const user = db.users.find(u => u.id === getCurrentUserId());
+                if (user) { user.banner_url = e.target.result; saveDB(db); renderProfile(); }
+            };
+            reader.onerror = () => alert('Ошибка чтения файла');
+            reader.readAsDataURL(file);
+        };
+
+        // ============ УВЕДОМЛЕНИЯ ============
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                const bell = document.querySelector('.notification-bell');
+                if (badge && bell) {
+                    if (unread > 0) {
+                        badge.innerText = unread > 9 ? '9+' : unread;
+                        bell.style.display = 'inline-block';
+                    } else {
+                        badge.innerText = '';
+                        bell.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // ============ ВЫХОД ============
+        window.logout = function () {
+            if (confirm('Вы уверены, что хотите выйти?')) { setCurrentUser(null); window.location.href = 'index.html'; }
+        };
+        
+        // Периодическое обновление бейджа
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

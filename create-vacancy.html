@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать вакансию — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .progress-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #8892B0;
+        }
+        .progress-bar-container {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .validation-hint {
+            font-size: 12px;
+            color: #FF007F;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            display: none;
+        }
+        .validation-hint.visible {
+            display: block;
+        }
+        .field-error {
+            border-color: #FF007F !important;
+            box-shadow: 0 0 10px rgba(255,0,127,0.3) !important;
+        }
+        .success-field {
+            border-color: #00FF88 !important;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 12px;
+            background: rgba(0,240,255,0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(0,240,255,0.2);
+        }
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #00F0FF;
+        }
+        .checkbox-group label {
+            color: #E0E7FF;
+            cursor: pointer;
+            flex: 1;
+        }
+        .checkbox-group .badge {
+            background: #00FF88;
+            color: #0A0E27;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .autosave-hint {
+            font-size: 11px;
+            color: #00FF88;
+            text-align: right;
+            margin-top: 8px;
+            display: none;
+        }
+        .autosave-hint.visible {
+            display: block;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 8px;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background-color: #0A0E27;
+            color: #00F0FF;
+            text-align: center;
+            border-radius: 6px;
+            padding: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid #00F0FF;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .char-counter {
+            font-size: 11px;
+            color: #8892B0;
+            text-align: right;
+            margin-top: -12px;
+            margin-bottom: 12px;
+        }
+        .char-counter.warning {
+            color: #FF007F;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" style="max-width:700px;">
+        <div class="glass-card">
+            <h2 style="color:#00F0FF; font-size:28px;">📋 Новая вакансия</h2>
+            <p style="color:#8892B0; margin-bottom:24px;">Заполните информацию о вакансии, чтобы найти лучших кандидатов</p>
+
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>📊 Заполнение вакансии</span>
+                    <span id="completionPercent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-fill" id="completionFill"></div>
+                </div>
+                <p style="font-size:12px; color:#8892B0; margin-top:8px;" id="completionHint">
+                    💡 Чем подробнее описание, тем больше откликов вы получите
+                </p>
+            </div>
+
+            <div class="message-box" id="msgBox"></div>
+            <div class="autosave-hint" id="autosaveHint">💾 Черновик сохранён</div>
+
+            <form id="vacancyForm">
+                <div class="section-title">
+                    📋 Основная информация
+                    <span class="tooltip">❓<span class="tooltip-text">Обязательные поля отмечены звёздочкой (*)</span></span>
+                </div>
+                
+                <input type="text" id="vacTitle" class="neon-input" placeholder="* Название должности (например: Senior Frontend Developer)" required>
+                <div class="validation-hint" id="titleHint">Укажите название должности (минимум 5 символов)</div>
+                
+                <input type="text" id="vacCompany" class="neon-input" placeholder="* Название компании" required>
+                <div class="validation-hint" id="companyHint">Укажите название компании (минимум 2 символа)</div>
+
+                <div class="input-row">
+                    <input type="text" id="vacSalary" class="neon-input" placeholder="💰 Зарплата (150 000 ₽)">
+                    <input type="text" id="vacCity" class="neon-input" placeholder="📍 Город">
+                </div>
+
+                <select id="vacType" class="neon-select">
+                    <option value="Полный день">🏢 Полный день</option>
+                    <option value="Удалённая работа">🏠 Удалённая работа</option>
+                    <option value="Гибрид">🔄 Гибрид</option>
+                    <option value="Проектная">📊 Проектная работа</option>
+                    <option value="Стажировка">🎓 Стажировка</option>
+                </select>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="disabledFriendly">
+                    <label for="disabledFriendly">♿ Вакансия подходит для людей с инвалидностью</label>
+                    <span class="badge">Квотируемое место</span>
+                </div>
+
+                <div class="section-title">📄 Описание вакансии <span style="color:#FF007F;">*</span></div>
+                <textarea id="vacDesc" class="neon-textarea" placeholder="Опишите обязанности, условия работы, график, что вы предлагаете кандидату..." rows="6" required></textarea>
+                <div class="char-counter" id="descCounter">0 / минимум 100 символов</div>
+                <div class="validation-hint" id="descHint">Описание должно содержать минимум 100 символов</div>
+
+                <div class="section-title">📋 Требования к кандидату</div>
+                <textarea id="vacReq" class="neon-textarea" placeholder="Опишите необходимые навыки, опыт, образование, личные качества..." rows="4"></textarea>
+                <div class="char-counter" id="reqCounter">0 символов (рекомендуется от 50)</div>
+
+                <div class="section-title">⚙️ Дополнительные настройки</div>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="urgentVacancy"> 🔥 Срочная вакансия
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="hiddenVacancy"> 👁️ Скрыть от поиска (черновик)
+                    </label>
+                </div>
+
+                <button type="submit" class="neon-btn w-full mt-2" id="submitBtn">⚡ Опубликовать вакансию</button>
+                <button type="button" class="neon-btn purple w-full mt-2" id="saveDraftBtn" style="background: transparent;">💾 Сохранить черновик</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!requireRole('employer')) throw new Error('Access denied');
+        updateNavigation();
+        updateNotificationBadge();
+
+        const vacTitle = document.getElementById('vacTitle');
+        const vacCompany = document.getElementById('vacCompany');
+        const vacSalary = document.getElementById('vacSalary');
+        const vacCity = document.getElementById('vacCity');
+        const vacType = document.getElementById('vacType');
+        const disabledFriendly = document.getElementById('disabledFriendly');
+        const vacDesc = document.getElementById('vacDesc');
+        const vacReq = document.getElementById('vacReq');
+        const urgentVacancy = document.getElementById('urgentVacancy');
+        const hiddenVacancy = document.getElementById('hiddenVacancy');
+
+        function validateTitle() {
+            const val = vacTitle.value.trim();
+            const isValid = val.length >= 5;
+            const hint = document.getElementById('titleHint');
+            if (!isValid && val.length > 0) {
+                hint.classList.add('visible');
+                vacTitle.classList.add('field-error');
+                vacTitle.classList.remove('success-field');
+            } else if (!isValid && val.length === 0) {
+                hint.classList.remove('visible');
+                vacTitle.classList.remove('field-error');
+                vacTitle.classList.remove('success-field');
+            } else {
+                hint.classList.remove('visible');
+                vacTitle.classList.remove('field-error');
+                vacTitle.classList.add('success-field');
+            }
+            return isValid;
+        }
+
+        function validateCompany() {
+            const val = vacCompany.value.trim();
+            const isValid = val.length >= 2;
+            const hint = document.getElementById('companyHint');
+            if (!isValid && val.length > 0) {
+                hint.classList.add('visible');
+                vacCompany.classList.add('field-error');
+                vacCompany.classList.remove('success-field');
+            } else if (!isValid && val.length === 0) {
+                hint.classList.remove('visible');
+                vacCompany.classList.remove('field-error');
+                vacCompany.classList.remove('success-field');
+            } else {
+                hint.classList.remove('visible');
+                vacCompany.classList.remove('field-error');
+                vacCompany.classList.add('success-field');
+            }
+            return isValid;
+        }
+
+        function validateDescription() {
+            const val = vacDesc.value.trim();
+            const isValid = val.length >= 100;
+            const hint = document.getElementById('descHint');
+            const counter = document.getElementById('descCounter');
+            counter.innerHTML = `${val.length} / минимум 100 символов`;
+            if (val.length > 0 && val.length < 100) {
+                counter.classList.add('warning');
+                hint.classList.add('visible');
+                vacDesc.classList.add('field-error');
+                vacDesc.classList.remove('success-field');
+            } else if (val.length >= 100) {
+                counter.classList.remove('warning');
+                hint.classList.remove('visible');
+                vacDesc.classList.remove('field-error');
+                vacDesc.classList.add('success-field');
+            } else {
+                counter.classList.remove('warning');
+                hint.classList.remove('visible');
+                vacDesc.classList.remove('field-error');
+                vacDesc.classList.remove('success-field');
+            }
+            return isValid;
+        }
+
+        function validateRequirements() {
+            const val = vacReq.value.trim();
+            const counter = document.getElementById('reqCounter');
+            counter.innerHTML = `${val.length} символов ${val.length >= 50 ? '✅' : '(рекомендуется от 50)'}`;
+            if (val.length >= 50) {
+                counter.classList.remove('warning');
+                vacReq.classList.add('success-field');
+            } else {
+                counter.classList.add('warning');
+                vacReq.classList.remove('success-field');
+            }
+            return true;
+        }
+
+        function calculateCompletion() {
+            let total = 0, filled = 0;
+            total += 2;
+            if (vacTitle.value.trim().length >= 5) filled++;
+            if (vacCompany.value.trim().length >= 2) filled++;
+            total++;
+            if (vacDesc.value.trim().length >= 100) filled++;
+            if (vacSalary.value.trim()) { filled++; } total++;
+            if (vacCity.value.trim()) { filled++; } total++;
+            if (vacReq.value.trim().length >= 50) { filled++; } total++;
+            const percent = Math.min(100, Math.round((filled / total) * 100));
+            document.getElementById('completionPercent').innerText = percent + '%';
+            document.getElementById('completionFill').style.width = percent + '%';
+            let hintText = '';
+            if (percent < 40) hintText = '⚠️ Заполните основные поля и подробное описание вакансии';
+            else if (percent < 70) hintText = '📝 Хороший старт! Добавьте требования к кандидату';
+            else hintText = '🎉 Отлично! Вакансия полностью готова к публикации';
+            document.getElementById('completionHint').innerHTML = '💡 ' + hintText;
+            return percent;
+        }
+
+        let autosaveTimeout;
+        function autosaveDraft() {
+            clearTimeout(autosaveTimeout);
+            autosaveTimeout = setTimeout(() => {
+                const draft = {
+                    title: vacTitle.value, company: vacCompany.value, salary: vacSalary.value,
+                    city: vacCity.value, type: vacType.value, disabled_friendly: disabledFriendly.checked,
+                    description: vacDesc.value, requirements: vacReq.value, urgent: urgentVacancy.checked,
+                    hidden: hiddenVacancy.checked, saved_at: new Date().toISOString()
+                };
+                localStorage.setItem('vacancy_draft', JSON.stringify(draft));
+                const hint = document.getElementById('autosaveHint');
+                hint.classList.add('visible');
+                setTimeout(() => hint.classList.remove('visible'), 2000);
+            }, 1000);
+        }
+
+        function loadDraft() {
+            const saved = localStorage.getItem('vacancy_draft');
+            if (saved) {
+                const draft = JSON.parse(saved);
+                if (draft.title) vacTitle.value = draft.title;
+                if (draft.company) vacCompany.value = draft.company;
+                if (draft.salary) vacSalary.value = draft.salary;
+                if (draft.city) vacCity.value = draft.city;
+                if (draft.type) vacType.value = draft.type;
+                if (draft.disabled_friendly) disabledFriendly.checked = draft.disabled_friendly;
+                if (draft.description) vacDesc.value = draft.description;
+                if (draft.requirements) vacReq.value = draft.requirements;
+                if (draft.urgent) urgentVacancy.checked = draft.urgent;
+                if (draft.hidden) hiddenVacancy.checked = draft.hidden;
+                if (draft.title || draft.company || draft.description) {
+                    showMessage('msgBox', '💾 Загружен сохранённый черновик', 'success');
+                }
+                calculateCompletion();
+                validateTitle();
+                validateCompany();
+                validateDescription();
+                validateRequirements();
+            }
+        }
+
+        function clearDraft() { localStorage.removeItem('vacancy_draft'); }
+
+        function saveAsDraft(isPublished = false) {
+            const db = getDB();
+            const vacancyData = {
+                id: generateId(),
+                employer_id: getCurrentUserId(),
+                title: vacTitle.value.trim() || 'Черновик',
+                company: vacCompany.value.trim() || 'Не указана',
+                salary: vacSalary.value.trim() || 'Не указана',
+                city: vacCity.value.trim() || 'Не указан',
+                type: vacType.value,
+                disabled_friendly: disabledFriendly.checked,
+                description: vacDesc.value.trim(),
+                requirements: vacReq.value.trim(),
+                is_active: !hiddenVacancy.checked && isPublished,  // ← ВАЖНО!
+                is_draft: !isPublished,
+                urgent: urgentVacancy.checked,
+                views: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            db.vacancies.push(vacancyData);
+            saveDB(db);
+            clearDraft();
+            return vacancyData;
+        }
+
+        document.getElementById('vacancyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateTitle()) { showMessage('msgBox', '❌ Укажите название должности (минимум 5 символов)', 'error'); vacTitle.focus(); return; }
+            if (!validateCompany()) { showMessage('msgBox', '❌ Укажите название компании', 'error'); vacCompany.focus(); return; }
+            if (!validateDescription()) { showMessage('msgBox', '❌ Описание вакансии должно содержать минимум 100 символов', 'error'); vacDesc.focus(); return; }
+            
+            saveAsDraft(true);
+            if (typeof addNotification !== 'undefined') {
+                addNotification(getCurrentUserId(), '✅ Ваша вакансия успешно опубликована!', 'success');
+            }
+            showMessage('msgBox', '✅ Вакансия успешно опубликована!', 'success');
+            setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        });
+
+        document.getElementById('saveDraftBtn').addEventListener('click', function() {
+            if (!vacTitle.value.trim() && !vacCompany.value.trim() && !vacDesc.value.trim()) {
+                showMessage('msgBox', '❌ Заполните хотя бы название и описание вакансии', 'error');
+                return;
+            }
+            saveAsDraft(false);
+            showMessage('msgBox', '💾 Вакансия сохранена как черновик', 'success');
+            setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
+        });
+
+        vacTitle.addEventListener('input', () => { validateTitle(); calculateCompletion(); autosaveDraft(); });
+        vacCompany.addEventListener('input', () => { validateCompany(); calculateCompletion(); autosaveDraft(); });
+        vacSalary.addEventListener('input', () => { calculateCompletion(); autosaveDraft(); });
+        vacCity.addEventListener('input', () => { calculateCompletion(); autosaveDraft(); });
+        vacType.addEventListener('change', () => { calculateCompletion(); autosaveDraft(); });
+        disabledFriendly.addEventListener('change', () => { calculateCompletion(); autosaveDraft(); });
+        vacDesc.addEventListener('input', () => { validateDescription(); calculateCompletion(); autosaveDraft(); });
+        vacReq.addEventListener('input', () => { validateRequirements(); calculateCompletion(); autosaveDraft(); });
+        urgentVacancy.addEventListener('change', autosaveDraft);
+        hiddenVacancy.addEventListener('change', autosaveDraft);
+
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+
+        loadDraft();
+        calculateCompletion();
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

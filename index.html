@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonCareer hub — Вакансии</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A0E27">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NeonCareer">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+    <style>
+        /* Скелетон (skeleton screen) */
+        .skeleton-card {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            height: 280px;
+            border-radius: 16px;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Теги */
+        .badge.new { background: #FF007F; color: white; margin-left: 8px; }
+        .badge.remote { background: #B900FF; }
+        .badge.disabled { background: #00FF88; color: #0A0E27; }
+        
+        /* Панель фильтров */
+        .filter-panel {
+            margin-bottom: 24px;
+            padding: 20px;
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .filter-row .neon-input,
+        .filter-row .neon-select {
+            margin-bottom: 0;
+            flex: 1;
+            min-width: 130px;
+        }
+        .filter-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #E0E7FF;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .filter-row .neon-input,
+            .filter-row .neon-select { width: 100%; }
+        }
+        
+        /* Кнопка сброса */
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #FF007F;
+            color: #FF007F;
+        }
+        .reset-btn:hover {
+            background: #FF007F;
+            color: white;
+            box-shadow: 0 0 15px rgba(255,0,127,0.5);
+        }
+        
+        /* Автодополнение */
+        .autocomplete-item {
+            padding: 10px 12px;
+            color: #E0E7FF;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        .autocomplete-item:hover {
+            background: rgba(0,240,255,0.15);
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    <a href="admin.html" class="nav-admin" style="display:none;">🔧 Админка</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div style="text-align:center; padding: 40px 20px 20px;">
+        <h1 class="neon-title">NEONCAREER HUB</h1>
+        <p class="subtitle">Найди работу мечты или лучших сотрудников в неоновом пространстве будущего</p>
+        <div class="stats-row" id="statsRow"></div>
+    </div>
+
+    <div class="container">
+        <!-- Панель фильтров и сортировки -->
+        <div class="glass-card filter-panel">
+            <div class="filter-row">
+                <div style="position:relative; flex:2; min-width:200px;">
+                    <input type="text" id="searchInput" class="neon-input" placeholder="🔍 Поиск по названию или компании..." style="width:100%; margin-bottom:0;">
+                    <div id="autocomplete-list" style="position:absolute; top:100%; left:0; width:100%; background:var(--bg-midnight); border:1px solid rgba(0,240,255,0.3); border-radius:0 0 8px 8px; z-index:100; display:none; max-height:250px; overflow-y:auto;"></div>
+                </div>
+                <select id="cityFilter" class="neon-select">
+                    <option value="">Все города</option>
+                </select>
+                <select id="typeFilter" class="neon-select">
+                    <option value="">Тип занятости</option>
+                </select>
+            </div>
+            <div class="filter-row" style="margin-top:12px;">
+                <input type="number" id="salaryMin" class="neon-input" placeholder="Зарплата от (₽)">
+                <input type="number" id="salaryMax" class="neon-input" placeholder="Зарплата до (₽)">
+                <select id="sortBy" class="neon-select">
+                    <option value="date_desc">📅 По дате (новые)</option>
+                    <option value="date_asc">📅 По дате (старые)</option>
+                    <option value="salary_asc">💰 Зарплата (по возрастанию)</option>
+                    <option value="salary_desc">💰 Зарплата (по убыванию)</option>
+                </select>
+                <label>
+                    <input type="checkbox" id="disabledFilter"> ♿ Только для инвалидов
+                </label>
+                <button id="resetFilters" class="neon-btn reset-btn">🔄 Сбросить все</button>
+            </div>
+        </div>
+
+        <!-- Кнопка создания вакансии (только для работодателя) -->
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="create-vacancy.html" class="neon-btn nav-employer" style="display:none;">+ Создать вакансию</a>
+        </div>
+
+        <!-- Сетка вакансий (изначально скелетоны) -->
+        <div class="card-grid" id="vacancyGrid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+        
+        <div id="emptyState" class="text-center hidden" style="padding:60px 20px;">
+            <p style="font-size:48px;">🌀</p>
+            <p style="color:#8892B0;">Вакансий не найдено</p>
+            <p style="color:#8892B0; font-size:14px;">Попробуйте изменить параметры поиска</p>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Глобальные переменные
+        let allVacancies = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            updateNavigation();
+            updateNotificationBadge();
+            await loadCitiesAndTypes();
+            attachEventListeners();
+            renderStats();
+            renderVacancies();
+            initScrollToTop();
+            
+            // Проверка PWA и уведомлений
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(console.log);
+            }
+        });
+        
+        // Загрузка уникальных городов и типов занятости
+        async function loadCitiesAndTypes() {
+            const db = getDB();
+            const activeVac = db.vacancies.filter(v => v.is_active !== false);
+            const cities = [...new Set(activeVac.map(v => v.city).filter(c => c && c.trim()))];
+            const types = [...new Set(activeVac.map(v => v.type).filter(t => t && t.trim()))];
+            
+            const citySelect = document.getElementById('cityFilter');
+            citySelect.innerHTML = '<option value="">🌍 Все города</option>' + 
+                cities.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            
+            const typeSelect = document.getElementById('typeFilter');
+            typeSelect.innerHTML = '<option value="">📋 Все типы</option>' + 
+                types.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+        }
+        
+        // Привязка обработчиков событий
+        function attachEventListeners() {
+            const inputs = ['searchInput', 'cityFilter', 'typeFilter', 'salaryMin', 'salaryMax', 'sortBy'];
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => renderVacancies());
+                    if (el.tagName === 'SELECT') el.addEventListener('change', () => renderVacancies());
+                }
+            });
+            
+            document.getElementById('disabledFilter').addEventListener('change', () => renderVacancies());
+            document.getElementById('resetFilters').addEventListener('click', resetAllFilters);
+            
+            // Автодополнение
+            const searchInput = document.getElementById('searchInput');
+            const autocompleteList = document.getElementById('autocomplete-list');
+            
+            searchInput.addEventListener('input', function() {
+                const val = this.value.trim().toLowerCase();
+                if (!val) {
+                    autocompleteList.style.display = 'none';
+                    renderVacancies();
+                    return;
+                }
+                const db = getDB();
+                const filtered = db.vacancies.filter(v => v.is_active !== false && 
+                    (v.title.toLowerCase().includes(val) || v.company.toLowerCase().includes(val)));
+                if (filtered.length > 0) {
+                    autocompleteList.innerHTML = filtered.slice(0, 6).map(v => `
+                        <div class="autocomplete-item" onclick="window.location.href='view-vacancy.html?id=' + encodeURIComponent(v.id)">
+                            ${escapeHtml(v.title)} — ${escapeHtml(v.company)}
+                        </div>
+                    `).join('');
+                    autocompleteList.style.display = 'block';
+                } else {
+                    autocompleteList.style.display = 'none';
+                }
+                renderVacancies(val);
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!autocompleteList.contains(e.target) && e.target !== searchInput) {
+                    autocompleteList.style.display = 'none';
+                }
+            });
+        }
+        
+        // Сброс всех фильтров
+        function resetAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('cityFilter').value = '';
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('disabledFilter').checked = false;
+            document.getElementById('salaryMin').value = '';
+            document.getElementById('salaryMax').value = '';
+            document.getElementById('sortBy').value = 'date_desc';
+            renderVacancies();
+        }
+        
+        // Извлечение числа из строки зарплаты
+        function extractSalaryNumber(salaryStr) {
+            if (!salaryStr) return 0;
+            const match = String(salaryStr).match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+        }
+        
+        // Получение отфильтрованных и отсортированных вакансий
+        function getFilteredVacancies() {
+            const db = getDB();
+            let vacancies = db.vacancies.filter(v => v.is_active !== false);
+            
+            // Текстовый поиск
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            if (search) {
+                vacancies = vacancies.filter(v => 
+                    v.title.toLowerCase().includes(search) || 
+                    v.company.toLowerCase().includes(search) ||
+                    (v.description || '').toLowerCase().includes(search)
+                );
+            }
+            
+            // Фильтр по городу
+            const city = document.getElementById('cityFilter').value;
+            if (city) vacancies = vacancies.filter(v => v.city === city);
+            
+            // Фильтр по типу занятости
+            const type = document.getElementById('typeFilter').value;
+            if (type) vacancies = vacancies.filter(v => v.type === type);
+            
+            // Фильтр для инвалидов
+            const disabledOnly = document.getElementById('disabledFilter').checked;
+            if (disabledOnly) vacancies = vacancies.filter(v => v.disabled_friendly === true);
+            
+            // Фильтр по зарплате
+            const salaryMin = parseInt(document.getElementById('salaryMin').value);
+            const salaryMax = parseInt(document.getElementById('salaryMax').value);
+            vacancies = vacancies.filter(v => {
+                const salaryNum = extractSalaryNumber(v.salary);
+                if (salaryMin && salaryNum < salaryMin) return false;
+                if (salaryMax && salaryNum > salaryMax) return false;
+                return true;
+            });
+            
+            // Сортировка
+            const sortBy = document.getElementById('sortBy').value;
+            vacancies.sort((a, b) => {
+                if (sortBy === 'date_desc') return new Date(b.created_at) - new Date(a.created_at);
+                if (sortBy === 'date_asc') return new Date(a.created_at) - new Date(b.created_at);
+                if (sortBy === 'salary_asc') return extractSalaryNumber(a.salary) - extractSalaryNumber(b.salary);
+                if (sortBy === 'salary_desc') return extractSalaryNumber(b.salary) - extractSalaryNumber(a.salary);
+                return 0;
+            });
+            
+            return vacancies;
+        }
+        
+        // Рендер статистики
+        function renderStats() {
+            const db = getDB();
+            const activeVacancies = db.vacancies.filter(v => v.is_active !== false);
+            const companies = [...new Set(activeVacancies.map(v => v.company))];
+            const candidates = db.users.filter(u => u.role === 'candidate');
+            document.getElementById('statsRow').innerHTML = `
+                <div class="stat-item"><div class="stat-number">${activeVacancies.length}</div><div class="stat-label">Вакансий</div></div>
+                <div class="stat-item"><div class="stat-number">${companies.length}</div><div class="stat-label">Компаний</div></div>
+                <div class="stat-item"><div class="stat-number">${candidates.length}</div><div class="stat-label">Соискателей</div></div>
+            `;
+        }
+        
+        // Рендер вакансий (основная функция)
+        function renderVacancies() {
+            const vacancies = getFilteredVacancies();
+            const grid = document.getElementById('vacancyGrid');
+            const empty = document.getElementById('emptyState');
+            
+            if (vacancies.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            
+            // Убираем скелетоны, показываем реальные карточки
+            grid.innerHTML = vacancies.map(v => {
+                const currentUser = getCurrentUser();
+                const isEmployer = currentUser && currentUser.role === 'employer';
+                
+                // Тег NEW (если опубликовано менее 3 дней назад)
+                const isNew = (new Date() - new Date(v.created_at)) < 3 * 24 * 3600 * 1000;
+                const newTag = isNew ? '<span class="badge new">New</span>' : '';
+                
+                // Тег Удалёнка
+                const remoteTag = v.type === 'Удалённая работа' ? '<span class="badge remote">🏠 Удалёнка</span>' : '';
+                
+                // Тег для инвалидов
+                const disabledTag = v.disabled_friendly ? '<span class="badge disabled">♿ Инвалидам</span>' : '';
+                
+                // Кнопка отклика
+                const respondButton = !isEmployer && currentUser && currentUser.role !== 'employer'
+                    ? `<button onclick="event.stopPropagation(); respondToVacancy('${v.id}')" class="neon-btn w-full mt-2">⚡ Откликнуться</button>`
+                    : (isEmployer ? `<p style="color:#8892B0; margin-top:10px; font-size:14px;">⚠️ Работодатель не может откликаться</p>` : `<button onclick="event.stopPropagation(); window.location.href='login.html'" class="neon-btn w-full mt-2">🔑 Войдите чтобы откликнуться</button>`);
+                
+                return `
+                    <div class="glass-card vacancy-card clickable" onclick="window.location.href='view-vacancy.html?id=${v.id}'">
+                        <div class="flex-between" style="align-items:start; flex-wrap:wrap; gap:8px;">
+                            <h3 style="color:#E0E7FF; font-size:20px;">${escapeHtml(v.title)}</h3>
+                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                <span class="badge">${escapeHtml(v.type || 'Полный день')}</span>
+                                ${newTag}${remoteTag}${disabledTag}
+                            </div>
+                        </div>
+                        <p style="color:#8892B0; margin-top:8px;">🏢 ${escapeHtml(v.company)} • 📍 ${escapeHtml(v.city || 'Москва')}</p>
+                        <p class="salary mt-1" style="color:#00F0FF; font-size:22px;">${escapeHtml(v.salary || 'Не указана')}</p>
+                        <p style="margin-top:10px; color:#8892B0; line-height:1.5;">${escapeHtml((v.description || '').substring(0, 180))}${(v.description || '').length > 180 ? '...' : ''}</p>
+                        <p style="color:#8892B0; font-size:11px; margin-top:8px;">📅 ${getRelativeTime(v.created_at)} • 👁️ ${v.views || 0} просмотров</p>
+                        ${respondButton}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Обновление бейджа уведомлений
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (unread > 0) {
+                        badge.innerText = unread;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.innerText = '';
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // Периодическое обновление бейджа уведомлений
+        setInterval(updateNotificationBadge, 5000);
+        // Регистрация Service Worker для PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker зарегистрирован:', reg))
+            .catch(err => console.error('Ошибка регистрации SW:', err));
+    });
+}
+    </script>
+</body>
+</html>

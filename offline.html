@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нет соединения — NeonCareer hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0A0E27 0%, #141852 100%);
+            color: #E0E7FF;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .offline-container {
+            max-width: 400px;
+            padding: 40px 20px;
+        }
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+        h1 {
+            color: #00F0FF;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+        p {
+            color: #8892B0;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .neon-btn {
+            background: transparent;
+            border: 2px solid #00F0FF;
+            color: #00F0FF;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .neon-btn:hover {
+            background: #00F0FF;
+            color: #0A0E27;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+        .retry-btn {
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">🌐</div>
+        <h1>Нет соединения с интернетом</h1>
+        <p>Проверьте подключение к сети и попробуйте снова.<br>Некоторые функции могут быть недоступны в офлайн-режиме.</p>
+        <button class="neon-btn" onclick="location.reload()">🔄 Попробовать снова</button>
+    </div>
+</body>
+</html>

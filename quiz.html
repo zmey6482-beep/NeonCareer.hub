@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профтестирование — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .quiz-header h1 {
+            font-size: 32px;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .quiz-progress {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .question-card {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 24px;
+            border: var(--border-glass);
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 20px;
+            color: #E0E7FF;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .option:hover {
+            background: rgba(0,240,255,0.1);
+            border-color: rgba(0,240,255,0.3);
+            transform: translateX(4px);
+        }
+        .option.selected {
+            background: rgba(0,240,255,0.15);
+            border-color: #00F0FF;
+        }
+        .option input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #00F0FF;
+        }
+        .option label {
+            flex: 1;
+            cursor: pointer;
+            color: #E0E7FF;
+            font-size: 16px;
+        }
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            gap: 16px;
+        }
+        .result-card {
+            text-align: center;
+            padding: 32px;
+        }
+        .result-score {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 20px 0;
+        }
+        .result-description {
+            color: #8892B0;
+            line-height: 1.6;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .badge-result {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px;
+        }
+        .badge-high { background: #00FF88; color: #0A0E27; }
+        .badge-middle { background: #FFD700; color: #0A0E27; }
+        .badge-low { background: #FF007F; color: white; }
+        .recommendations {
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .recommendations h4 {
+            color: #00F0FF;
+            margin-bottom: 12px;
+        }
+        .recommendations ul {
+            margin-left: 20px;
+            color: #8892B0;
+        }
+        .recommendations li {
+            margin: 8px 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container quiz-container">
+        <div class="quiz-header">
+            <h1>🎓 Профессиональное тестирование</h1>
+            <p class="subtitle">Пройдите тест и узнайте свои профессиональные склонности</p>
+        </div>
+
+        <div id="quizContent">
+            <!-- Загрузка -->
+            <div class="glass-card" style="text-align:center; padding:40px;">
+                <p>🌀 Загрузка теста...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Проверка авторизации (только для соискателей)
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        const currentUser = getCurrentUser();
+        if (currentUser && currentUser.role !== 'candidate') {
+            // Работодатели тоже могут пройти тест для интереса, но не сохраняем в профиль
+            // Просто показываем предупреждение
+            if (currentUser.role === 'employer') {
+                console.log('Работодатель проходит тест');
+            }
+        }
+        
+        updateNavigation();
+        updateNotificationBadge();
+
+        // Вопросы теста (профессиональная ориентация)
+        const questions = [
+            {
+                text: "Что вам больше нравится делать в работе?",
+                options: [
+                    "Анализировать данные, работать с цифрами и отчётами",
+                    "Общаться с людьми, помогать, консультировать",
+                    "Создавать что-то новое: дизайн, код, тексты",
+                    "Организовывать процессы, управлять людьми",
+                    "Работать руками, создавать материальные продукты"
+                ]
+            },
+            {
+                text: "Какая рабочая среда для вас предпочтительнее?",
+                options: [
+                    "Спокойная, размеренная, с чёткими инструкциями",
+                    "Динамичная, с постоянным общением",
+                    "Творческая, с возможностью экспериментировать",
+                    "Руководящая, с ответственностью за результаты",
+                    "Самостоятельная, работа на выезде или с оборудованием"
+                ]
+            },
+            {
+                text: "Что для вас важнее всего в работе?",
+                options: [
+                    "Стабильность и предсказуемость",
+                    "Помощь другим и социальная значимость",
+                    "Творческая реализация и самовыражение",
+                    "Карьерный рост и власть",
+                    "Хорошая зарплата и материальные блага"
+                ]
+            },
+            {
+                text: "Как вы предпочитаете решать проблемы?",
+                options: [
+                    "Системно, используя логику и алгоритмы",
+                    "Обсуждая с коллегами, ища компромисс",
+                    "Интуитивно, находя нестандартные решения",
+                    "Быстро, принимая решения самостоятельно",
+                    "Практично, опираясь на опыт и факты"
+                ]
+            },
+            {
+                text: "Какие навыки вы хотите развивать?",
+                options: [
+                    "Программирование, аналитику, работу с базами данных",
+                    "Коммуникацию, переговоры, эмпатию",
+                    "Дизайн, копирайтинг, видеомонтаж",
+                    "Управление проектами, лидерство, стратегию",
+                    "Технические навыки, ремонт, строительство"
+                ]
+            },
+            {
+                text: "В какой сфере вы видите своё будущее?",
+                options: [
+                    "IT, финансы, наука, инженерия",
+                    "Образование, медицина, психология, сервис",
+                    "Маркетинг, искусство, медиа, развлечения",
+                    "Бизнес, политика, менеджмент, предпринимательство",
+                    "Производство, строительство, транспорт, сельское хозяйство"
+                ]
+            },
+            {
+                text: "Что вас мотивирует работать лучше?",
+                options: [
+                    "Сложные задачи и интеллектуальные вызовы",
+                    "Благодарность людей и социальное признание",
+                    "Возможность творить и создавать уникальные вещи",
+                    "Конкуренция и стремление быть лучшим",
+                    "Деньги и материальная выгода"
+                ]
+            },
+            {
+                text: "Как вы относитесь к рутинной работе?",
+                options: [
+                    "Люблю структурированность и порядок",
+                    "Терплю, если она полезна для других",
+                    "Стараюсь автоматизировать и упрощать",
+                    "Делегирую её другим",
+                    "Быстро устаю, нужна смена деятельности"
+                ]
+            },
+            {
+                text: "Что вы делаете в свободное время?",
+                options: [
+                    "Изучаю новые технологии, читаю, анализирую",
+                    "Общаюсь с друзьями, волонтёрю",
+                    "Рисую, пишу музыку, снимаю видео",
+                    "Планирую, веду блог, организую мероприятия",
+                    "Занимаюсь спортом, ремонтом, рукоделием"
+                ]
+            },
+            {
+                text: "Какая должность вам ближе?",
+                options: [
+                    "Аналитик, программист, инженер",
+                    "Учитель, врач, психолог, менеджер по работе с клиентами",
+                    "Дизайнер, копирайтер, видеограф",
+                    "Руководитель отдела, предприниматель",
+                    "Рабочий, водитель, строитель"
+                ]
+            }
+        ];
+
+        // Интерпретация результатов
+        const interpretations = {
+            "Аналитик": {
+                description: "Вы — аналитический склад ума. Вам подходят профессии, требующие логики, внимания к деталям и работы с данными.",
+                professions: "Программист, Data Scientist, Бухгалтер, Аналитик, Инженер, Научный сотрудник",
+                skills: "Python, SQL, Excel, Статистика, Системное мышление",
+                companies: "IT-компании, банки, научные институты, консалтинг"
+            },
+            "Коммуникатор": {
+                description: "Вы — человек-коммуникация. Вам важно общение, помощь другим и социальная значимость.",
+                professions: "HR-менеджер, Психолог, Учитель, Врач, PR-менеджер, Продавец-консультант",
+                skills: "Коммуникабельность, Эмпатия, Навыки презентации, Переговоры",
+                companies: "Образование, медицина, HR-агентства, сервисные компании"
+            },
+            "Творец": {
+                description: "Вы — творческая личность. Вам необходима свобода самовыражения и создание уникальных продуктов.",
+                professions: "Веб-дизайнер, UX/UI Дизайнер, Копирайтер, Маркетолог, Видеомонтажёр, Художник",
+                skills: "Figma, Photoshop, Adobe After Effects, Креативность, Визуальное мышление",
+                companies: "Дизайн-студии, рекламные агентства, медиа, IT-компании"
+            },
+            "Лидер": {
+                description: "Вы — прирождённый лидер. Вас привлекает управление, стратегия и ответственность.",
+                professions: "Project Manager, Team Lead, Предприниматель, Управляющий, Менеджер по развитию",
+                skills: "Управление проектами, Лидерство, Стратегическое планирование, Agile, Scrum",
+                companies: "Стартапы, корпорации, консалтинговые компании, собственный бизнес"
+            },
+            "Практик": {
+                description: "Вы — практический тип. Вам нравится работать руками, создавать материальные ценности.",
+                professions: "Строитель, Монтажник, Водитель, Механик, Электрик, Технолог",
+                skills: "Технические навыки, Внимательность, Физическая выносливость, Точность",
+                companies: "Производственные предприятия, строительные компании, транспортные компании"
+            }
+        };
+
+        let currentQuestion = 0;
+        let answers = new Array(questions.length).fill(null);
+
+        // Рендер прогресса
+        function renderProgress() {
+            const answered = answers.filter(a => a !== null).length;
+            const percent = (answered / questions.length) * 100;
+            return `
+                <div class="quiz-progress">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color:#E0E7FF;">Вопрос ${currentQuestion + 1} из ${questions.length}</span>
+                        <span style="color:#00F0FF;">${answered} / ${questions.length} отвечено</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percent}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Рендер вопроса
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            const selectedAnswer = answers[currentQuestion];
+            
+            let optionsHtml = q.options.map((opt, idx) => `
+                <div class="option ${selectedAnswer === idx ? 'selected' : ''}" data-opt="${idx}">
+                    <input type="radio" name="question" value="${idx}" id="opt_${idx}" ${selectedAnswer === idx ? 'checked' : ''}>
+                    <label for="opt_${idx}">${escapeHtml(opt)}</label>
+                </div>
+            `).join('');
+            
+            return `
+                <div class="question-card fade-in">
+                    <div class="question-text">${currentQuestion + 1}. ${escapeHtml(q.text)}</div>
+                    <div class="options-list" id="optionsList">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Рендер навигации
+        function renderNavigation() {
+            return `
+                <div class="quiz-navigation">
+                    <button class="neon-btn ${currentQuestion === 0 ? 'purple' : ''}" id="prevBtn" ${currentQuestion === 0 ? 'disabled style="opacity:0.5;"' : ''}>
+                        ← Назад
+                    </button>
+                    <button class="neon-btn" id="nextBtn">
+                        ${currentQuestion === questions.length - 1 ? '🏁 Завершить тест' : 'Далее →'}
+                    </button>
+                </div>
+            `;
+        }
+
+        // Обработка выбора ответа
+        function attachOptionListeners() {
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    // Не обрабатываем клик, если кликнули по уже выбранному
+                    const radio = opt.querySelector('input');
+                    if (radio) {
+                        radio.checked = true;
+                        answers[currentQuestion] = parseInt(opt.dataset.opt);
+                        // Обновляем стили
+                        document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                        opt.classList.add('selected');
+                        // Обновляем прогресс
+                        renderQuiz();
+                    }
+                });
+            });
+        }
+
+        // Рендер всего теста
+        function renderQuiz() {
+            const quizContent = document.getElementById('quizContent');
+            quizContent.innerHTML = `
+                ${renderProgress()}
+                ${renderQuestion()}
+                ${renderNavigation()}
+            `;
+            
+            attachOptionListeners();
+            
+            // Обработчики кнопок
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (prevBtn && currentQuestion > 0) {
+                prevBtn.addEventListener('click', () => {
+                    currentQuestion--;
+                    renderQuiz();
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (answers[currentQuestion] === null) {
+                        showToast('❌ Пожалуйста, выберите ответ перед продолжением');
+                        return;
+                    }
+                    
+                    if (currentQuestion === questions.length - 1) {
+                        // Завершение теста
+                        calculateResults();
+                    } else {
+                        currentQuestion++;
+                        renderQuiz();
+                    }
+                });
+            }
+        }
+
+        // Подсчёт результатов
+        function calculateResults() {
+            // Подсчёт, к какому типу склоняется пользователь
+            const scores = {
+                "Аналитик": 0,
+                "Коммуникатор": 0,
+                "Творец": 0,
+                "Лидер": 0,
+                "Практик": 0
+            };
+            
+            // Маппинг ответов на типы (0-4 соответствуют порядку в вопросах)
+            // Каждый ответ указывает на предпочтение одного из 5 типов
+            answers.forEach(answer => {
+                if (answer !== null) {
+                    switch(answer) {
+                        case 0: scores["Аналитик"]++; break;
+                        case 1: scores["Коммуникатор"]++; break;
+                        case 2: scores["Творец"]++; break;
+                        case 3: scores["Лидер"]++; break;
+                        case 4: scores["Практик"]++; break;
+                    }
+                }
+            });
+            
+            // Находим максимальный тип
+            let maxType = null;
+            let maxScore = -1;
+            for (const [type, score] of Object.entries(scores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                    maxType = type;
+                }
+            }
+            
+            // Сохраняем результат в профиле пользователя
+            const db = getDB();
+            const userIndex = db.users.findIndex(u => u.id === getCurrentUserId());
+            if (userIndex !== -1) {
+                db.users[userIndex].quiz_result = maxType;
+                db.users[userIndex].quiz_score = maxScore;
+                db.users[userIndex].quiz_date = new Date().toISOString();
+                db.users[userIndex].quiz_answers = answers;
+                saveDB(db);
+                
+                // Обновляем текущего пользователя в сессии
+                setCurrentUser({
+                    id: db.users[userIndex].id,
+                    email: db.users[userIndex].email,
+                    name: db.users[userIndex].name,
+                    role: db.users[userIndex].role
+                });
+            }
+            
+            // Отправляем уведомление
+            if (typeof addNotification !== 'undefined') {
+                addNotification(getCurrentUserId(), `🎉 Вы прошли профтестирование! Ваш тип: ${maxType}. Результат сохранён в профиле.`, 'success');
+            }
+            
+            // Отображаем результат
+            displayResults(maxType, maxScore, scores);
+        }
+        
+        // Отображение результатов
+        function displayResults(type, score, allScores) {
+            const interpretation = interpretations[type] || interpretations["Аналитик"];
+            const percent = Math.round((score / questions.length) * 100);
+            
+            let badgeClass = '';
+            if (percent >= 50) badgeClass = 'badge-high';
+            else if (percent >= 30) badgeClass = 'badge-middle';
+            else badgeClass = 'badge-low';
+            
+            // Построение дополнительных рекомендаций
+            let recommendationsHtml = `
+                <div class="recommendations">
+                    <h4>📚 Рекомендации по развитию</h4>
+                    <ul>
+                        <li><strong>Рекомендуемые профессии:</strong> ${interpretation.professions}</li>
+                        <li><strong>Ключевые навыки для изучения:</strong> ${interpretation.skills}</li>
+                        <li><strong>Где работать:</strong> ${interpretation.companies}</li>
+                    </ul>
+                </div>
+            `;
+            
+            // Таблица всех результатов
+            let allResultsHtml = '<div class="recommendations" style="margin-top:16px;"><h4>📊 Ваши склонности по типам</h4><ul>';
+            for (const [t, s] of Object.entries(allScores)) {
+                const widthPercent = (s / questions.length) * 100;
+                allResultsHtml += `
+                    <li style="margin-bottom:8px;">
+                        <strong>${t}:</strong> ${s} ответов
+                        <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:4px;">
+                            <div style="width:${widthPercent}%; height:100%; background:linear-gradient(90deg,#00F0FF,#B900FF); border-radius:2px;"></div>
+                        </div>
+                    </li>
+                `;
+            }
+            allResultsHtml += '</ul></div>';
+            
+            const quizContent = document.getElementById('quizContent');
+            quizContent.innerHTML = `
+                <div class="glass-card result-card fade-in">
+                    <div style="font-size:48px;">
+                        ${type === 'Аналитик' ? '📊' : type === 'Коммуникатор' ? '💬' : type === 'Творец' ? '🎨' : type === 'Лидер' ? '👑' : '🔧'}
+                    </div>
+                    <h2 style="color:#00F0FF;">Ваш профессиональный тип:</h2>
+                    <div class="result-score">${escapeHtml(type)}</div>
+                    <div class="badge-result ${badgeClass}">Совпадение: ${percent}%</div>
+                    <p class="result-description">${interpretation.description}</p>
+                    ${recommendationsHtml}
+                    ${allResultsHtml}
+                    <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
+                        <button class="neon-btn" onclick="window.location.href='profile.html'">👤 Перейти в профиль</button>
+                        <button class="neon-btn purple" onclick="resetQuiz()">🔄 Пройти тест заново</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Сброс теста
+        function resetQuiz() {
+            if (confirm('Вы уверены, что хотите пройти тест заново? Предыдущий результат будет удалён.')) {
+                answers = new Array(questions.length).fill(null);
+                currentQuestion = 0;
+                
+                // Удаляем результат из профиля
+                const db = getDB();
+                const userIndex = db.users.findIndex(u => u.id === getCurrentUserId());
+                if (userIndex !== -1) {
+                    delete db.users[userIndex].quiz_result;
+                    delete db.users[userIndex].quiz_score;
+                    delete db.users[userIndex].quiz_date;
+                    delete db.users[userIndex].quiz_answers;
+                    saveDB(db);
+                }
+                
+                renderQuiz();
+            }
+        }
+        
+        // Проверка, проходил ли пользователь тест ранее
+        function checkExistingResult() {
+            const db = getDB();
+            const user = db.users.find(u => u.id === getCurrentUserId());
+            if (user && user.quiz_result) {
+                // Если уже проходил, предлагаем показать результат или пройти заново
+                const quizContent = document.getElementById('quizContent');
+                quizContent.innerHTML = `
+                    <div class="glass-card result-card fade-in">
+                        <div style="font-size:48px;">📋</div>
+                        <h2 style="color:#00F0FF;">Вы уже проходили тест!</h2>
+                        <p style="color:#8892B0; margin:20px 0;">Ваш профессиональный тип: <strong style="color:#00F0FF;">${user.quiz_result}</strong></p>
+                        <div style="display:flex; gap:12px; justify-content:center;">
+                            <button class="neon-btn" onclick="window.location.href='profile.html'">👤 Перейти в профиль</button>
+                            <button class="neon-btn purple" onclick="resetAndStart()">🔄 Пройти заново</button>
+                        </div>
+                    </div>
+                `;
+                return true;
+            }
+            return false;
+        }
+        
+        function resetAndStart() {
+            const db = getDB();
+            const userIndex = db.users.findIndex(u => u.id === getCurrentUserId());
+            if (userIndex !== -1) {
+                delete db.users[userIndex].quiz_result;
+                delete db.users[userIndex].quiz_score;
+                delete db.users[userIndex].quiz_date;
+                delete db.users[userIndex].quiz_answers;
+                saveDB(db);
+            }
+            answers = new Array(questions.length).fill(null);
+            currentQuestion = 0;
+            renderQuiz();
+        }
+        
+        // Тост-уведомление
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
+                    background: linear-gradient(135deg, #00F0FF, #B900FF);
+                    color: #0A0E27;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    z-index: 10001;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                    box-shadow: 0 0 20px rgba(0,240,255,0.5);
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+        
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        // Инициализация
+        if (!checkExistingResult()) {
+            renderQuiz();
+        }
+        
+        setInterval(updateNotificationBadge, 5000);
+        
+        // Экспорт глобальных функций
+        window.resetQuiz = resetQuiz;
+        window.resetAndStart = resetAndStart;
+    </script>
+</body>
+</html>

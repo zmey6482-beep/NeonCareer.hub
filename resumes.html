@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Резюме — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container">
+        <h1 class="neon-title" style="font-size:36px;">📄 Каталог резюме</h1>
+        <p class="subtitle" id="resumeCount">Загрузка...</p>
+
+        <div class="card-grid" id="resumesGrid">
+            <p style="text-align:center; color:#8892B0; grid-column:1/-1;">Загрузка резюме...</p>
+        </div>
+        <div id="emptyState" class="text-center hidden" style="padding:60px;">
+            <p style="font-size:48px;">🌀</p>
+            <p style="color:#8892B0;">Пока нет ни одного резюме</p>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNavigation();
+            const resumes = loadResumes();
+            const grid = document.getElementById('resumesGrid');
+            const empty = document.getElementById('emptyState');
+            const count = document.getElementById('resumeCount');
+            const db = getDB();
+            const defaultAvatar =
+                'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22%3E%3Crect fill=%22%23141852%22 width=%2248%22 height=%2248%22/%3E%3Ctext fill=%22%2300F0FF%22 x=%2224%22 y=%2230%22 text-anchor=%22middle%22 font-size=%2220%22%3E👤%3C/text%3E%3C/svg%3E';
+
+            count.textContent = `${resumes.length} специалистов ждут предложений`;
+
+            if (resumes.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = resumes.map(r => {
+                const candidate = db.users.find(u => u.id === r.candidate_id);
+                return `
+                    <div class="glass-card resume-card-item clickable" onclick="window.location.href='view-resume.html?id=${r.id}'">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                            <img src="${candidate?.avatar_url || defaultAvatar}" alt="Аватар"
+                                 style="width:48px; height:48px; border-radius:50%; border:2px solid #B900FF; object-fit:cover;">
+                            <div>
+                                <h3 style="color:#E0E7FF; font-size:16px;">${escapeHtml(candidate?.name || 'Пользователь')}</h3>
+                                <p style="color:#B900FF; font-size:14px;">${escapeHtml(r.desired_position)}</p>
+                            </div>
+                        </div>
+                        <p style="color:#8892B0; font-size:14px;">
+                            💰 ${formatSalary(r.salary_from, r.salary_to)} • 📍 ${escapeHtml(r.city || '—')}
+                        </p>
+                        <div style="margin-top:8px;">
+                            ${(r.skills || []).slice(0, 4).map(s => `<span class="badge">${escapeHtml(s)}</span>`).join(' ')}
+                            ${(r.skills || []).length > 4 ? `<span style="color:#8892B0; font-size:12px;">+${r.skills.length - 4}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        });
+    </script>
+</body>
+</html>

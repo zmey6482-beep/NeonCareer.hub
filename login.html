@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+        }
+        .admin-hint {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #8892B0;
+        }
+        .admin-hint a {
+            color: #B900FF;
+            text-decoration: none;
+        }
+        .admin-hint a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="glass-card login-box">
+            <div class="text-center mb-2">
+                <a href="index.html" class="logo" style="font-size:24px;">⚡ NeonCareer hub</a>
+            </div>
+            <h2 style="font-size:28px; text-align:center; background:linear-gradient(90deg,#00F0FF,#B900FF); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Вход в систему</h2>
+            <p class="subtitle">Добро пожаловать обратно в неоновое пространство</p>
+
+            <div class="message-box" id="msgBox"></div>
+
+            <form id="loginForm">
+                <input type="email" id="email" class="neon-input" placeholder="📧 Email" required>
+                <input type="password" id="password" class="neon-input" placeholder="🔒 Пароль" required>
+                <button type="submit" class="neon-btn w-full">⚡ Войти</button>
+            </form>
+
+            <p class="text-center mt-3" style="color:#8892B0;">
+                Нет аккаунта? <a href="register.html" style="color:#00F0FF;">Зарегистрироваться</a>
+            </p>
+            <p class="text-center mt-2">
+                <a href="index.html" style="color:#8892B0;">← К вакансиям</a>
+            </p>
+            <div class="admin-hint">
+                👑 <a href="#" onclick="adminLogin()">Вход для администратора</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script>
+        // ===== УНИВЕРСАЛЬНЫЙ АДМИН (хранится в коде) =====
+        const ADMIN_EMAIL = 'admin@neoncareer.ru';
+        const ADMIN_PASSWORD = 'admin123';
+
+        // Если уже авторизован — редирект по роли
+        if (isLoggedIn()) {
+            const user = getCurrentUser();
+            if (user.role === 'admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // ===== ФУНКЦИЯ ДЛЯ АДМИН-ВХОДА =====
+        window.adminLogin = function() {
+            // Автоматически заполняем поля
+            document.getElementById('email').value = ADMIN_EMAIL;
+            document.getElementById('password').value = ADMIN_PASSWORD;
+            // Отправляем форму
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            return false;
+        };
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // ===== ПРОВЕРКА НА АДМИНА (из кода) =====
+            if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                // Создаём сессию админа
+                setCurrentUser({
+                    id: 'admin-001',
+                    email: ADMIN_EMAIL,
+                    name: 'Администратор',
+                    role: 'admin'
+                });
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // ===== ПРОВЕРКА НА ОБЫЧНЫХ ПОЛЬЗОВАТЕЛЕЙ (из БД) =====
+            try {
+                const user = login(email, password);
+                if (user.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                showMessage('msgBox', err.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

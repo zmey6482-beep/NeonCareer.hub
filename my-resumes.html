@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои резюме — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" style="max-width:800px;">
+        <div class="flex-between mt-3 mb-3">
+            <h2 style="color:#00F0FF; font-size:28px;">📝 Мои резюме</h2>
+            <a href="create-resume.html" class="neon-btn">+ Создать</a>
+        </div>
+
+        <div id="myResumesList"></div>
+        <div id="emptyState" class="text-center hidden" style="padding:60px;">
+            <p style="font-size:48px;">📄</p>
+            <p style="color:#8892B0;">У вас ещё нет резюме</p>
+            <a href="create-resume.html" class="neon-btn mt-2">Создать первое резюме</a>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!requireRole('candidate')) throw new Error('Access denied');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNavigation();
+            renderMyResumes();
+        });
+
+        function renderMyResumes() {
+            const db = getDB();
+            const currentUserId = getCurrentUserId();
+            const myResumes = db.resumes.filter(r => r.candidate_id === currentUserId);
+            const list = document.getElementById('myResumesList');
+            const empty = document.getElementById('emptyState');
+
+            if (myResumes.length === 0) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            list.innerHTML = myResumes.map(r => `
+                <div class="glass-card" style="margin-bottom:16px; border-left:3px solid ${r.is_active ? '#00F0FF' : '#555'};">
+                    <div class="flex-between" style="align-items:start; flex-wrap:wrap; gap:8px;">
+                        <h3 style="color:#E0E7FF; font-size:20px;">
+                            ${escapeHtml(r.title)}
+                            <span class="badge ${r.is_active ? '' : 'purple'}">${r.is_active ? '✓ Активно' : 'Скрыто'}</span>
+                        </h3>
+                    </div>
+                    <p style="color:#00F0FF; font-size:16px; margin-top:8px;">${escapeHtml(r.desired_position)}</p>
+                    <p style="color:#8892B0; margin-top:4px;">
+                        💰 ${formatSalary(r.salary_from, r.salary_to)} • 
+                        📍 ${escapeHtml(r.city || 'Не указан')} • 
+                        🕒 ${escapeHtml(r.employment_type)}
+                    </p>
+                    <p style="color:#8892B0; font-size:12px;">Обновлено: ${getRelativeTime(r.updated_at)}</p>
+                    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                        <!-- ИСПРАВЛЕНО: используем encodeURIComponent для ID -->
+                        <a href="view-resume.html?id=${encodeURIComponent(r.id)}" class="neon-btn small">👁️ Просмотр</a>
+                        <button class="neon-btn purple small" onclick="toggleActive('${r.id}')">${r.is_active ? '👁️ Скрыть' : '📢 Показать'}</button>
+                        <button class="neon-btn pink small" onclick="deleteMyResume('${r.id}')">🗑️ Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ИСПРАВЛЕНО: принимаем ID как строку
+        window.toggleActive = function(id) {
+            const db = getDB();
+            // Ищем резюме по строковому ID
+            const resume = db.resumes.find(r => String(r.id) === String(id));
+            if (resume) {
+                resume.is_active = !resume.is_active;
+                resume.updated_at = new Date().toISOString();
+                saveDB(db);
+                renderMyResumes();
+            } else {
+                alert('Резюме не найдено');
+            }
+        };
+
+        // ИСПРАВЛЕНО: принимаем ID как строку
+        window.deleteMyResume = function(id) {
+            if (!confirm('Вы уверены, что хотите удалить это резюме? Это действие нельзя отменить.')) return;
+            const db = getDB();
+            db.resumes = db.resumes.filter(r => String(r.id) !== String(id));
+            saveDB(db);
+            renderMyResumes();
+        };
+
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

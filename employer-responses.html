@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Отклики на вакансии — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .response-card {
+            margin-bottom: 16px;
+            padding: 16px;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            border: var(--border-glass);
+            transition: all 0.3s;
+        }
+        .response-card:hover {
+            border-color: rgba(0,240,255,0.3);
+            transform: translateY(-2px);
+        }
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .response-info h3 {
+            color: #E0E7FF;
+            margin-bottom: 4px;
+        }
+        .response-info p {
+            color: #8892B0;
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        .response-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .response-actions select {
+            min-width: 180px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-new { background: rgba(0,240,255,0.2); color: #00F0FF; }
+        .status-review { background: rgba(255,215,0,0.2); color: #FFD700; }
+        .status-accepted { background: rgba(0,255,136,0.2); color: #00FF88; }
+        .status-rejected { background: rgba(255,0,127,0.2); color: #FF007F; }
+        .response-time {
+            color: #8892B0;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .confirm-btn {
+            background: transparent;
+            border: 2px solid #00FF88;
+            color: #00FF88;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .confirm-btn:hover {
+            background: #00FF88;
+            color: #0A0E27;
+            box-shadow: 0 0 15px rgba(0,255,136,0.4);
+        }
+        .confirm-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .confirm-btn:disabled:hover {
+            background: transparent;
+            color: #00FF88;
+            box-shadow: none;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8892B0;
+        }
+        .empty-state p:first-child {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #00F0FF, #B900FF);
+            color: #0A0E27;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 0 20px rgba(0,240,255,0.5);
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+   <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+
+    <div class="container" style="max-width:900px;">
+        <h2 style="color:#00F0FF; margin-bottom:24px;">📬 Отклики на мои вакансии</h2>
+        <div id="responsesList"><p style="color:#8892B0; text-align:center;">Загрузка...</p></div>
+        <div id="emptyState" class="empty-state hidden">
+            <p>📭</p>
+            <p>Откликов пока нет</p>
+            <p style="font-size:14px;">Когда соискатели откликнутся на ваши вакансии, они появятся здесь</p>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!requireRole('employer')) throw new Error('Access denied');
+        updateNavigation();
+        updateNotificationBadge();
+
+        // Храним выбранные статусы для каждого отклика
+        let selectedStatuses = {};
+
+        function loadResponses() {
+            const db = getDB();
+            const currentUserId = getCurrentUserId();
+            const myVacancies = db.vacancies.filter(v => v.employer_id === currentUserId);
+            const myVacancyIds = myVacancies.map(v => v.id);
+            const responses = db.responses.filter(r => myVacancyIds.includes(r.vacancy_id));
+            const list = document.getElementById('responsesList');
+            const empty = document.getElementById('emptyState');
+            
+            if (responses.length === 0) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            
+            // Инициализируем выбранные статусы
+            responses.forEach(resp => {
+                const currentStatus = resp.status || 'Новый';
+                if (!selectedStatuses[resp.id]) {
+                    selectedStatuses[resp.id] = currentStatus;
+                }
+            });
+            
+            list.innerHTML = responses.map(resp => {
+                const vacancy = db.vacancies.find(v => v.id === resp.vacancy_id);
+                const candidate = db.users.find(u => u.id === resp.candidate_id);
+                const currentStatus = resp.status || 'Новый';
+                const selectedStatus = selectedStatuses[resp.id] || currentStatus;
+                const isChanged = selectedStatus !== currentStatus;
+                
+                let statusClass = 'status-new';
+                if (selectedStatus === 'На рассмотрении') statusClass = 'status-review';
+                else if (selectedStatus === 'Принят') statusClass = 'status-accepted';
+                else if (selectedStatus === 'Отказ') statusClass = 'status-rejected';
+                
+                return `
+                    <div class="response-card" id="response-${resp.id}">
+                        <div class="response-header">
+                            <div class="response-info">
+                                <h3>${escapeHtml(candidate?.name || 'Соискатель')}</h3>
+                                <p style="color:#00F0FF;">Вакансия: <strong>${escapeHtml(vacancy?.title || '—')}</strong></p>
+                                <p style="color:#8892B0; font-size:14px;">${escapeHtml(vacancy?.company || 'Компания не указана')}</p>
+                                <span class="status-badge ${statusClass}" id="badge-${resp.id}">${selectedStatus}</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <p style="color:#8892B0; font-size:12px;">${getRelativeTime(resp.created_at)}</p>
+                                <button class="neon-btn small" onclick="window.location.href='view-resume.html?candidate_id=${resp.candidate_id}'">📄 Резюме</button>
+                                <button class="neon-btn purple small" onclick="window.location.href='chat.html?user=${resp.candidate_id}'">💬 Написать</button>
+                            </div>
+                        </div>
+                        
+                        <div class="response-actions">
+                            <select id="status-select-${resp.id}" class="neon-select" style="min-width:180px;">
+                                <option value="Новый" ${selectedStatus === 'Новый' ? 'selected' : ''}>🕐 Новый</option>
+                                <option value="На рассмотрении" ${selectedStatus === 'На рассмотрении' ? 'selected' : ''}>👀 На рассмотрении</option>
+                                <option value="Принят" ${selectedStatus === 'Принят' ? 'selected' : ''}>✅ Принят</option>
+                                <option value="Отказ" ${selectedStatus === 'Отказ' ? 'selected' : ''}>❌ Отказ</option>
+                            </select>
+                            <button class="confirm-btn" id="confirm-btn-${resp.id}" onclick="confirmStatus('${resp.id}')" ${!isChanged ? 'disabled' : ''}>
+                                ✅ Подтвердить
+                            </button>
+                        </div>
+                        <div class="response-time">📅 ${new Date(resp.created_at).toLocaleDateString('ru-RU')} в ${new Date(resp.created_at).toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Добавляем обработчики для отслеживания изменений
+            responses.forEach(resp => {
+                const select = document.getElementById(`status-select-${resp.id}`);
+                if (select) {
+                    select.addEventListener('change', function() {
+                        const newStatus = this.value;
+                        selectedStatuses[resp.id] = newStatus;
+                        const confirmBtn = document.getElementById(`confirm-btn-${resp.id}`);
+                        if (confirmBtn) {
+                            confirmBtn.disabled = false;
+                        }
+                        // Визуально обновляем статус
+                        updateStatusBadge(resp.id, newStatus);
+                    });
+                }
+            });
+        }
+        
+        // Визуальное обновление бейджа статуса без перезагрузки
+        function updateStatusBadge(responseId, newStatus) {
+            const badge = document.getElementById(`badge-${responseId}`);
+            if (!badge) return;
+            
+            let statusClass = 'status-new';
+            if (newStatus === 'На рассмотрении') statusClass = 'status-review';
+            else if (newStatus === 'Принят') statusClass = 'status-accepted';
+            else if (newStatus === 'Отказ') statusClass = 'status-rejected';
+            
+            badge.className = `status-badge ${statusClass}`;
+            badge.textContent = newStatus;
+        }
+        
+        // Подтверждение статуса
+        window.confirmStatus = function(responseId) {
+            const newStatus = selectedStatuses[responseId];
+            if (!newStatus) return;
+            
+            const db = getDB();
+            // Ищем отклик по ID (как строке)
+            const resp = db.responses.find(r => String(r.id) === String(responseId));
+            
+            if (!resp) {
+                showToast('❌ Ошибка: отклик не найден');
+                return;
+            }
+            
+            const oldStatus = resp.status || 'Новый';
+            
+            // Обновляем статус
+            resp.status = newStatus;
+            resp.updated_at = new Date().toISOString();
+            saveDB(db);
+            
+            // Отключаем кнопку
+            const confirmBtn = document.getElementById(`confirm-btn-${responseId}`);
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+            }
+            
+            // Обновляем бейдж
+            updateStatusBadge(responseId, newStatus);
+            
+            // Уведомление соискателю
+            if (typeof addNotification !== 'undefined') {
+                const candidate = db.users.find(u => u.id === resp.candidate_id);
+                if (candidate) {
+                    const vacancy = db.vacancies.find(v => v.id === resp.vacancy_id);
+                    const vacancyTitle = vacancy ? vacancy.title : 'вакансию';
+                    addNotification(
+                        resp.candidate_id, 
+                        `📬 Статус вашего отклика на "${vacancyTitle}" изменён на "${newStatus}"`, 
+                        'response'
+                    );
+                }
+            }
+            
+            showToast(`✅ Статус изменён на "${newStatus}"`);
+        };
+        
+        // Тост-уведомление
+        function showToast(message) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadResponses();
+        });
+        
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* ===== ОБЩИЕ СТИЛИ ===== */
+        * { box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #0A0E27 0%, #141852 100%); }
+        
+        .admin-wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* ===== ШАПКА ===== */
+        .admin-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .admin-top .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        .admin-top .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .admin-top .admin-user span {
+            color: #E0E7FF;
+        }
+        .admin-top .admin-user .badge {
+            background: linear-gradient(135deg, #B900FF, #FF007F);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .admin-top .admin-user .neon-btn {
+            padding: 6px 18px;
+            font-size: 13px;
+        }
+        
+        /* ===== СТАТИСТИКА ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: rgba(10, 14, 39, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .stat-card .icon { font-size: 32px; margin-bottom: 8px; }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #00F0FF;
+        }
+        .stat-card .label {
+            color: #8892B0;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        /* ===== ВКЛАДКИ ===== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            color: #8892B0;
+            padding: 10px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .tab-btn:hover {
+            border-color: #00F0FF;
+            color: #00F0FF;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #00F0FF, #0088CC);
+            color: #0A0E27;
+            border-color: #00F0FF;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== КАРТОЧКИ ===== */
+        .panel-card {
+            background: rgba(10, 14, 39, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .panel-card h3 {
+            color: #00F0FF;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        
+        /* ===== ТАБЛИЦЫ ===== */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table th {
+            text-align: left;
+            padding: 12px 14px;
+            color: #8892B0;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        table td {
+            padding: 12px 14px;
+            color: #E0E7FF;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        table tr:hover td { background: rgba(0, 240, 255, 0.03); }
+        
+        .badge-role {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-role.admin { background: #B900FF; color: white; }
+        .badge-role.employer { background: #00F0FF; color: #0A0E27; }
+        .badge-role.candidate { background: #FFD700; color: #0A0E27; }
+        
+        .badge-status {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-status.active { background: rgba(0, 255, 136, 0.2); color: #00FF88; }
+        .badge-status.inactive { background: rgba(255, 0, 127, 0.2); color: #FF007F; }
+        .badge-status.blocked { background: rgba(255, 0, 127, 0.2); color: #FF007F; }
+        
+        /* ===== КНОПКИ ДЕЙСТВИЙ ===== */
+        .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .actions .btn-sm {
+            padding: 4px 12px;
+            font-size: 11px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        .actions .btn-sm:hover { transform: scale(1.05); }
+        .btn-primary { background: #00F0FF; color: #0A0E27; }
+        .btn-primary:hover { box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+        .btn-danger { background: #FF007F; color: white; }
+        .btn-danger:hover { box-shadow: 0 0 15px rgba(255, 0, 127, 0.4); }
+        .btn-warning { background: #FFD700; color: #0A0E27; }
+        .btn-warning:hover { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+        .btn-purple { background: #B900FF; color: white; }
+        .btn-purple:hover { box-shadow: 0 0 15px rgba(185, 0, 255, 0.4); }
+        
+        /* ===== ПОИСК ===== */
+        .search-box {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .search-box input:focus {
+            border-color: #00F0FF;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+        }
+        .search-box input::placeholder { color: #8892B0; }
+        
+        /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8892B0;
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 768px) {
+            .admin-top { flex-direction: column; align-items: stretch; text-align: center; }
+            .admin-top .admin-user { justify-content: center; flex-wrap: wrap; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .tab-btn { padding: 8px 16px; font-size: 13px; }
+            table { font-size: 12px; }
+            table th, table td { padding: 8px 10px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-card .number { font-size: 24px; }
+            .panel-card { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== ШАПКА ===== -->
+<div class="admin-wrap">
+    <div class="admin-top">
+        <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+        <div class="admin-user">
+            <span>👑 <span id="adminName">Администратор</span></span>
+            <span class="badge">🔐 Админ</span>
+            <button onclick="logout()" class="neon-btn purple small">🚪 Выйти</button>
+        </div>
+    </div>
+
+    <!-- ===== СТАТИСТИКА ===== -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="icon">👥</div><div class="number" id="statUsers">0</div><div class="label">Пользователей</div></div>
+        <div class="stat-card"><div class="icon">📋</div><div class="number" id="statVacancies">0</div><div class="label">Вакансий</div></div>
+        <div class="stat-card"><div class="icon">📄</div><div class="number" id="statResumes">0</div><div class="label">Резюме</div></div>
+        <div class="stat-card"><div class="icon">📬</div><div class="number" id="statResponses">0</div><div class="label">Откликов</div></div>
+        <div class="stat-card"><div class="icon">⚠️</div><div class="number" id="statComplaints">0</div><div class="label">Жалоб</div></div>
+    </div>
+
+    <!-- ===== ВКЛАДКИ ===== -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="users">👥 Пользователи</button>
+        <button class="tab-btn" data-tab="vacancies">📋 Вакансии</button>
+        <button class="tab-btn" data-tab="resumes">📄 Резюме</button>
+        <button class="tab-btn" data-tab="responses">📬 Отклики</button>
+        <button class="tab-btn" data-tab="complaints">⚠️ Жалобы</button>
+    </div>
+
+    <!-- ===== ВКЛАДКА: ПОЛЬЗОВАТЕЛИ ===== -->
+    <div id="tab-users" class="tab-content active">
+        <div class="panel-card">
+            <div class="search-box">
+                <input type="text" id="searchUsers" placeholder="🔍 Поиск по имени или email...">
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Имя</th><th>Email</th><th>Роль</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+            <div id="usersEmpty" class="empty-state hidden"><div class="icon">👥</div><p>Пользователи не найдены</p></div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА: ВАКАНСИИ ===== -->
+    <div id="tab-vacancies" class="tab-content">
+        <div class="panel-card">
+            <div class="search-box">
+                <input type="text" id="searchVacancies" placeholder="🔍 Поиск по названию или компании...">
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Название</th><th>Компания</th><th>Автор</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody id="vacanciesTable"></tbody>
+                </table>
+            </div>
+            <div id="vacanciesEmpty" class="empty-state hidden"><div class="icon">📋</div><p>Вакансии не найдены</p></div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА: РЕЗЮМЕ ===== -->
+    <div id="tab-resumes" class="tab-content">
+        <div class="panel-card">
+            <div class="search-box">
+                <input type="text" id="searchResumes" placeholder="🔍 Поиск по названию или должности...">
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Название</th><th>Должность</th><th>Автор</th><th>Статус</th><th>Действия</th></tr></thead>
+                    <tbody id="resumesTable"></tbody>
+                </table>
+            </div>
+            <div id="resumesEmpty" class="empty-state hidden"><div class="icon">📄</div><p>Резюме не найдены</p></div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА: ОТКЛИКИ ===== -->
+    <div id="tab-responses" class="tab-content">
+        <div class="panel-card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Вакансия</th><th>Кандидат</th><th>Статус</th><th>Дата</th><th>Действия</th></tr></thead>
+                    <tbody id="responsesTable"></tbody>
+                </table>
+            </div>
+            <div id="responsesEmpty" class="empty-state hidden"><div class="icon">📬</div><p>Откликов нет</p></div>
+        </div>
+    </div>
+
+    <!-- ===== ВКЛАДКА: ЖАЛОБЫ ===== -->
+    <div id="tab-complaints" class="tab-content">
+        <div class="panel-card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Тип</th><th>Объект</th><th>От кого</th><th>Причина</th><th>Дата</th><th>Действия</th></tr></thead>
+                    <tbody id="complaintsTable"></tbody>
+                </table>
+            </div>
+            <div id="complaintsEmpty" class="empty-state hidden"><div class="icon">⚠️</div><p>Жалоб нет</p></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/router.js"></script>
+<script>
+    // ===== ПРОВЕРКА ДОСТУПА =====
+    if (!isLoggedIn() || getCurrentUser().role !== 'admin') {
+        window.location.href = 'login.html';
+    }
+
+    document.getElementById('adminName').textContent = getCurrentUser().name;
+
+    // ===== ВКЛАДКИ =====
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+            loadTab(this.dataset.tab);
+        });
+    });
+
+    // ===== ЗАГРУЗКА ДАННЫХ =====
+    function loadTab(tab) {
+        if (tab === 'users') loadUsers();
+        else if (tab === 'vacancies') loadVacancies();
+        else if (tab === 'resumes') loadResumes();
+        else if (tab === 'responses') loadResponses();
+        else if (tab === 'complaints') loadComplaints();
+    }
+
+    // ===== СТАТИСТИКА =====
+    function updateStats() {
+        const db = getDB();
+        document.getElementById('statUsers').textContent = db.users.length;
+        document.getElementById('statVacancies').textContent = db.vacancies.length;
+        document.getElementById('statResumes').textContent = db.resumes.length;
+        document.getElementById('statResponses').textContent = db.responses.length;
+        document.getElementById('statComplaints').textContent = (db.complaints || []).length;
+    }
+
+    // ===== ПОЛЬЗОВАТЕЛИ =====
+    function loadUsers() {
+        const db = getDB();
+        const search = document.getElementById('searchUsers').value.toLowerCase();
+        let users = db.users.filter(u => u.role !== 'admin');
+        if (search) users = users.filter(u => u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search));
+        
+        const tbody = document.getElementById('usersTable');
+        const empty = document.getElementById('usersEmpty');
+        if (!users.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>${escapeHtml(u.name)}</td>
+                <td>${escapeHtml(u.email)}</td>
+                <td><span class="badge-role ${u.role}">${u.role === 'employer' ? '🏢 Работодатель' : '👨‍💻 Соискатель'}</span></td>
+                <td><span class="badge-status ${u.blocked ? 'blocked' : 'active'}">${u.blocked ? '🔒 Заблокирован' : '✅ Активен'}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-sm ${u.blocked ? 'btn-primary' : 'btn-danger'}" onclick="toggleBlock('${u.id}')">${u.blocked ? '🔓' : '🔒'}</button>
+                        <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.toggleBlock = function(id) {
+        if (!confirm('Изменить статус пользователя?')) return;
+        const db = getDB();
+        const u = db.users.find(u => String(u.id) === String(id));
+        if (u) { u.blocked = !u.blocked; saveDB(db); loadUsers(); updateStats(); showToast(u.blocked ? '🔒 Заблокирован' : '🔓 Разблокирован'); }
+    };
+    window.deleteUser = function(id) {
+        if (!confirm('Удалить пользователя?')) return;
+        const db = getDB();
+        db.users = db.users.filter(u => String(u.id) !== String(id));
+        saveDB(db); loadUsers(); updateStats(); showToast('🗑 Удалён');
+    };
+    document.getElementById('searchUsers').addEventListener('input', loadUsers);
+
+    // ===== ВАКАНСИИ =====
+    function loadVacancies() {
+        const db = getDB();
+        const search = document.getElementById('searchVacancies').value.toLowerCase();
+        let items = db.vacancies || [];
+        if (search) items = items.filter(v => v.title.toLowerCase().includes(search) || v.company.toLowerCase().includes(search));
+        
+        const tbody = document.getElementById('vacanciesTable');
+        const empty = document.getElementById('vacanciesEmpty');
+        if (!items.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        
+        tbody.innerHTML = items.map(v => {
+            const author = db.users.find(u => u.id === v.employer_id);
+            return `<tr>
+                <td>${escapeHtml(v.title)}</td>
+                <td>${escapeHtml(v.company)}</td>
+                <td>${escapeHtml(author?.name || '—')}</td>
+                <td><span class="badge-status ${v.is_active !== false ? 'active' : 'inactive'}">${v.is_active !== false ? '✅ Активна' : '❌ Скрыта'}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-sm btn-primary" onclick="toggleVacancy('${v.id}')">${v.is_active !== false ? '🔒' : '🔓'}</button>
+                        <button class="btn-sm btn-danger" onclick="deleteVacancy('${v.id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    window.toggleVacancy = function(id) {
+        const db = getDB();
+        const v = db.vacancies.find(v => String(v.id) === String(id));
+        if (v) { v.is_active = !v.is_active; saveDB(db); loadVacancies(); updateStats(); showToast(v.is_active ? '✅ Активна' : '🔒 Скрыта'); }
+    };
+    window.deleteVacancy = function(id) {
+        if (!confirm('Удалить вакансию?')) return;
+        const db = getDB();
+        db.vacancies = db.vacancies.filter(v => String(v.id) !== String(id));
+        saveDB(db); loadVacancies(); updateStats(); showToast('🗑 Удалена');
+    };
+    document.getElementById('searchVacancies').addEventListener('input', loadVacancies);
+
+    // ===== РЕЗЮМЕ =====
+    function loadResumes() {
+        const db = getDB();
+        const search = document.getElementById('searchResumes').value.toLowerCase();
+        let items = db.resumes || [];
+        if (search) items = items.filter(r => r.title.toLowerCase().includes(search) || r.desired_position.toLowerCase().includes(search));
+        
+        const tbody = document.getElementById('resumesTable');
+        const empty = document.getElementById('resumesEmpty');
+        if (!items.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        
+        tbody.innerHTML = items.map(r => {
+            const author = db.users.find(u => u.id === r.candidate_id);
+            return `<tr>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.desired_position)}</td>
+                <td>${escapeHtml(author?.name || '—')}</td>
+                <td><span class="badge-status ${r.is_active !== false ? 'active' : 'inactive'}">${r.is_active !== false ? '✅ Активно' : '❌ Скрыто'}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-sm btn-primary" onclick="toggleResume('${r.id}')">${r.is_active !== false ? '🔒' : '🔓'}</button>
+                        <button class="btn-sm btn-danger" onclick="deleteResume('${r.id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    window.toggleResume = function(id) {
+        const db = getDB();
+        const r = db.resumes.find(r => String(r.id) === String(id));
+        if (r) { r.is_active = !r.is_active; saveDB(db); loadResumes(); updateStats(); showToast(r.is_active ? '✅ Активно' : '🔒 Скрыто'); }
+    };
+    window.deleteResume = function(id) {
+        if (!confirm('Удалить резюме?')) return;
+        const db = getDB();
+        db.resumes = db.resumes.filter(r => String(r.id) !== String(id));
+        saveDB(db); loadResumes(); updateStats(); showToast('🗑 Удалено');
+    };
+    document.getElementById('searchResumes').addEventListener('input', loadResumes);
+
+    // ===== ОТКЛИКИ =====
+    function loadResponses() {
+        const db = getDB();
+        const items = db.responses || [];
+        const tbody = document.getElementById('responsesTable');
+        const empty = document.getElementById('responsesEmpty');
+        if (!items.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        
+        tbody.innerHTML = items.map(r => {
+            const vacancy = db.vacancies.find(v => v.id === r.vacancy_id);
+            const candidate = db.users.find(u => u.id === r.candidate_id);
+            const statusColor = r.status === 'Принят' ? '#00FF88' : r.status === 'На рассмотрении' ? '#FFD700' : r.status === 'Отказ' ? '#FF007F' : '#8892B0';
+            return `<tr>
+                <td>${escapeHtml(vacancy?.title || '—')}</td>
+                <td>${escapeHtml(candidate?.name || '—')}</td>
+                <td><span style="color:${statusColor};font-weight:bold;">${r.status || 'Новый'}</span></td>
+                <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-sm btn-danger" onclick="deleteResponse('${r.id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    window.deleteResponse = function(id) {
+        if (!confirm('Удалить отклик?')) return;
+        const db = getDB();
+        db.responses = db.responses.filter(r => String(r.id) !== String(id));
+        saveDB(db); loadResponses(); updateStats(); showToast('🗑 Удалён');
+    };
+
+    // ===== ЖАЛОБЫ =====
+    function loadComplaints() {
+        const db = getDB();
+        const items = db.complaints || [];
+        const tbody = document.getElementById('complaintsTable');
+        const empty = document.getElementById('complaintsEmpty');
+        if (!items.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
+        empty.classList.add('hidden');
+        
+        tbody.innerHTML = items.map(c => `
+            <tr>
+                <td>${c.type === 'vacancy' ? '📋 Вакансия' : '📄 Резюме'}</td>
+                <td>ID: ${String(c.target_id).substring(0, 8)}</td>
+                <td>${escapeHtml(c.from_name || '—')}</td>
+                <td>${escapeHtml(c.reason || '—')}</td>
+                <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-sm btn-primary" onclick="resolveComplaint('${c.id}')">✅ Решена</button>
+                        <button class="btn-sm btn-danger" onclick="deleteComplaint('${c.id}')">🗑</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.resolveComplaint = function(id) {
+        if (!confirm('Отметить жалобу как решённую?')) return;
+        const db = getDB();
+        db.complaints = db.complaints.filter(c => String(c.id) !== String(id));
+        saveDB(db); loadComplaints(); updateStats(); showToast('✅ Решена');
+    };
+    window.deleteComplaint = function(id) {
+        if (!confirm('Удалить жалобу?')) return;
+        const db = getDB();
+        db.complaints = db.complaints.filter(c => String(c.id) !== String(id));
+        saveDB(db); loadComplaints(); updateStats(); showToast('🗑 Удалена');
+    };
+
+    // ===== ТОСТ =====
+    function showToast(msg) {
+        let t = document.getElementById('adminToast');
+        if (!t) { t = document.createElement('div'); t.id = 'adminToast'; t.style.cssText = 'position:fixed;bottom:30px;right:30px;background:linear-gradient(135deg,#00F0FF,#B900FF);color:#0A0E27;padding:12px 24px;border-radius:8px;font-weight:bold;z-index:10001;opacity:0;transition:opacity 0.3s;box-shadow:0 0 20px rgba(0,240,255,0.5);'; document.body.appendChild(t); }
+        t.textContent = msg; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 3000);
+    }
+
+    // ===== ЗАГРУЗКА =====
+    updateStats();
+    loadUsers();
+    setInterval(updateStats, 5000);
+</script>
+</body>
+</html>

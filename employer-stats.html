@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика работодателя — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        
+        .stat-card {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 24px;
+            border: var(--border-glass);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-card h3 {
+            color: #00F0FF;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0,240,255,0.2);
+            padding-bottom: 8px;
+        }
+        
+        .big-number {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00F0FF, #B900FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .conversion-rate {
+            font-size: 36px;
+            font-weight: bold;
+            color: #00FF88;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0,255,136,0.3);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .stat-label {
+            color: #8892B0;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            color: #E0E7FF;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .vacancy-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        
+        .vacancy-item:hover {
+            background: rgba(0,240,255,0.05);
+        }
+        
+        .vacancy-title {
+            font-weight: bold;
+            color: #E0E7FF;
+            font-size: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .vacancy-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .vacancy-stat {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        
+        .vacancy-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00F0FF;
+        }
+        
+        .vacancy-stat-label {
+            font-size: 11px;
+            color: #8892B0;
+            margin-top: 4px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .period-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .period-btn {
+            background: transparent;
+            border: 1px solid rgba(0,240,255,0.3);
+            color: #8892B0;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .period-btn.active {
+            background: #00F0FF;
+            color: #0A0E27;
+            border-color: #00F0FF;
+        }
+        
+        .period-btn:hover {
+            border-color: #00F0FF;
+            color: #00F0FF;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #8892B0;
+        }
+        
+        .no-data p {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .action-buttons-stats {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .vacancy-title { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="stats-container">
+        <h1 class="neon-title" style="font-size: 36px;">📊 Статистика работодателя</h1>
+        <p class="subtitle">Анализируйте эффективность ваших вакансий и отслеживайте динамику</p>
+
+        <div id="statsContent">
+            <div class="no-data">
+                <p>📈</p>
+                <p>Загрузка статистики...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Проверка доступа (только работодатель)
+        if (!requireRole('employer')) {
+            throw new Error('Доступ запрещён. Только для работодателей.');
+        }
+        
+        updateNavigation();
+        updateNotificationBadge();
+        
+        let currentPeriod = 7;
+        
+        function renderEmployerStats() {
+            const db = getDB();
+            const employerId = getCurrentUserId();
+            
+            console.log('Employer ID:', employerId);
+            console.log('Все вакансии:', db.vacancies);
+            
+            const myVacancies = db.vacancies.filter(v => v.employer_id === employerId);
+            
+            console.log('Мои вакансии:', myVacancies);
+            
+            if (myVacancies.length === 0) {
+                document.getElementById('statsContent').innerHTML = `
+                    <div class="no-data">
+                        <p>📭</p>
+                        <p>У вас пока нет вакансий</p>
+                        <a href="create-vacancy.html" class="neon-btn mt-2">➕ Создать первую вакансию</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            const myVacancyIds = myVacancies.map(v => v.id);
+            const responses = db.responses.filter(r => myVacancyIds.includes(r.vacancy_id));
+            const accepted = responses.filter(r => r.status === 'Принят').length;
+            const totalResponses = responses.length;
+            const conversion = totalResponses > 0 ? ((accepted / totalResponses) * 100).toFixed(1) : 0;
+            
+            const totalViews = myVacancies.reduce((sum, v) => sum + (v.views || 0), 0);
+            const uniqueCandidates = [...new Set(responses.map(r => r.candidate_id))].length;
+            
+            // Отклики по дням
+            const dailyResponses = getDailyResponsesForPeriod(responses, currentPeriod);
+            const maxResponses = Math.max(...dailyResponses.map(d => d.count), 1);
+            
+            // Вакансии с детальной статистикой
+            const vacanciesStats = myVacancies.map(v => {
+                const vacResponses = responses.filter(r => r.vacancy_id === v.id);
+                const vacAccepted = vacResponses.filter(r => r.status === 'Принят').length;
+                return {
+                    ...v,
+                    responses_count: vacResponses.length,
+                    accepted_count: vacAccepted,
+                    views: v.views || 0,
+                    conversion: vacResponses.length > 0 ? ((vacAccepted / vacResponses.length) * 100).toFixed(1) : 0
+                };
+            }).sort((a, b) => b.responses_count - a.responses_count);
+            
+            document.getElementById('statsContent').innerHTML = `
+                <div class="period-buttons">
+                    <button class="period-btn ${currentPeriod === 7 ? 'active' : ''}" onclick="setPeriod(7)">7 дней</button>
+                    <button class="period-btn ${currentPeriod === 14 ? 'active' : ''}" onclick="setPeriod(14)">14 дней</button>
+                    <button class="period-btn ${currentPeriod === 30 ? 'active' : ''}" onclick="setPeriod(30)">30 дней</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <!-- Общая статистика -->
+                    <div class="stat-card">
+                        <h3>📈 Общая статистика</h3>
+                        <div class="big-number">${myVacancies.length}</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Активных вакансий</span>
+                            <span class="stat-value">${myVacancies.filter(v => v.is_active !== false).length}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Всего просмотров</span>
+                            <span class="stat-value">👁️ ${totalViews}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Всего откликов</span>
+                            <span class="stat-value">📬 ${totalResponses}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Уникальных кандидатов</span>
+                            <span class="stat-value">👥 ${uniqueCandidates}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Конверсия -->
+                    <div class="stat-card">
+                        <h3>🎯 Конверсия</h3>
+                        <div class="conversion-rate">${conversion}%</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Принято откликов</span>
+                            <span class="stat-value">✅ ${accepted}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Отклонено / в работе</span>
+                            <span class="stat-value">⏳ ${totalResponses - accepted}</span>
+                        </div>
+                        <div class="progress-bar mt-2">
+                            <div class="progress-fill" style="width: ${conversion}%"></div>
+                        </div>
+                        <p style="color:#8892B0; font-size:12px; margin-top:12px;">Процент откликов, перешедших в статус "Принят"</p>
+                    </div>
+                    
+                    <!-- График -->
+                    <div class="stat-card">
+                        <h3>📅 Динамика откликов</h3>
+                        <canvas id="responsesChart" width="400" height="200" style="width:100%; height:200px;"></canvas>
+                        <p style="color:#8892B0; font-size:12px; text-align:center; margin-top:10px;">Отклики за последние ${currentPeriod} дней</p>
+                    </div>
+                </div>
+                
+                <!-- Детализация по вакансиям -->
+                <div class="stat-card" style="margin-top: 24px;">
+                    <h3>📋 Детализация по вакансиям</h3>
+                    ${vacanciesStats.map(v => `
+                        <div class="vacancy-item">
+                            <div class="vacancy-title">
+                                <span>${escapeHtml(v.title)}</span>
+                                <span class="badge ${v.is_active !== false ? '' : 'purple'}">${v.is_active !== false ? 'Активна' : 'Скрыта'}</span>
+                            </div>
+                            <div class="vacancy-stats">
+                                <div class="vacancy-stat">
+                                    <div class="vacancy-stat-value">👁️ ${v.views || 0}</div>
+                                    <div class="vacancy-stat-label">Просмотров</div>
+                                </div>
+                                <div class="vacancy-stat">
+                                    <div class="vacancy-stat-value">📬 ${v.responses_count}</div>
+                                    <div class="vacancy-stat-label">Откликов</div>
+                                </div>
+                                <div class="vacancy-stat">
+                                    <div class="vacancy-stat-value">✅ ${v.accepted_count}</div>
+                                    <div class="vacancy-stat-label">Принято</div>
+                                </div>
+                                <div class="vacancy-stat">
+                                    <div class="vacancy-stat-value">${v.conversion}%</div>
+                                    <div class="vacancy-stat-label">Конверсия</div>
+                                </div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${Math.min(100, (v.responses_count / Math.max(...vacanciesStats.map(v2 => v2.responses_count), 1)) * 100)}%"></div>
+                            </div>
+                            <div class="action-buttons-stats">
+                                <a href="view-vacancy.html?id=${v.id}" class="neon-btn small">👁️ Просмотреть</a>
+                                <a href="employer-responses.html?vacancy=${v.id}" class="neon-btn purple small">📬 Отклики (${v.responses_count})</a>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Рекомендации -->
+                <div class="stat-card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(0,240,255,0.05), rgba(185,0,255,0.05));">
+                    <h3>💡 Рекомендации</h3>
+                    ${generateRecommendations(vacanciesStats, totalResponses, totalViews)}
+                </div>
+            `;
+            
+            drawChart(dailyResponses, maxResponses);
+        }
+        
+        function getDailyResponsesForPeriod(responses, days) {
+            const result = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().slice(0, 10);
+                const count = responses.filter(r => r.created_at && r.created_at.startsWith(dateStr)).length;
+                result.push({ date: dateStr, count: count });
+            }
+            return result;
+        }
+        
+        function drawChart(data, maxValue) {
+            const canvas = document.getElementById('responsesChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.clientWidth;
+            const height = 200;
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            if (data.length === 0 || maxValue === 0) {
+                ctx.fillStyle = '#8892B0';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Нет данных для отображения', width / 2, height / 2);
+                return;
+            }
+            
+            const barWidth = (width / data.length) * 0.7;
+            const startX = (width / data.length) * 0.15;
+            const bottomY = height - 30;
+            
+            for (let i = 0; i < data.length; i++) {
+                const barHeight = (data[i].count / maxValue) * (height - 60);
+                const x = startX + i * (width / data.length);
+                const y = bottomY - barHeight;
+                
+                const gradient = ctx.createLinearGradient(x, y, x, y + barHeight);
+                gradient.addColorStop(0, '#00F0FF');
+                gradient.addColorStop(1, '#B900FF');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                ctx.fillStyle = '#8892B0';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                const dateLabel = data[i].date.slice(5);
+                ctx.fillText(dateLabel, x + barWidth / 2, bottomY + 15);
+                
+                if (data[i].count > 0) {
+                    ctx.fillStyle = '#00F0FF';
+                    ctx.font = '11px sans-serif';
+                    ctx.fillText(data[i].count, x + barWidth / 2, y - 5);
+                }
+            }
+        }
+        
+        function generateRecommendations(vacanciesStats, totalResponses, totalViews) {
+            const recommendations = [];
+            
+            const avgResponseRate = totalResponses > 0 ? (totalResponses / vacanciesStats.length).toFixed(1) : 0;
+            const lowResponseVacancies = vacanciesStats.filter(v => v.responses_count < 2 && v.responses_count < avgResponseRate);
+            
+            if (lowResponseVacancies.length > 0) {
+                recommendations.push(`
+                    <div class="stat-row">
+                        <span class="stat-label">⚠️ Вакансии с низким числом откликов:</span>
+                        <span class="stat-value">${lowResponseVacancies.map(v => v.title).join(', ')}</span>
+                    </div>
+                    <p style="color:#8892B0; font-size:13px; margin-left:12px;">💡 Попробуйте обновить описание или скорректировать требования</p>
+                `);
+            }
+            
+            const bestVacancy = vacanciesStats.sort((a, b) => b.conversion - a.conversion)[0];
+            if (bestVacancy && bestVacancy.conversion > 0) {
+                recommendations.push(`
+                    <div class="stat-row">
+                        <span class="stat-label">🏆 Лучшая конверсия:</span>
+                        <span class="stat-value">"${bestVacancy.title}" — ${bestVacancy.conversion}%</span>
+                    </div>
+                `);
+            }
+            
+            if (totalViews === 0) {
+                recommendations.push(`
+                    <div class="stat-row">
+                        <span class="stat-label">🔍 Низкая видимость вакансий</span>
+                    </div>
+                    <p style="color:#8892B0; font-size:13px; margin-left:12px;">💡 Попробуйте разместить ссылки на вакансии в социальных сетях</p>
+                `);
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push(`
+                    <div class="stat-row">
+                        <span class="stat-label">🎉 Отличная работа!</span>
+                        <span class="stat-value">Ваши вакансии показывают хорошие результаты</span>
+                    </div>
+                `);
+            }
+            
+            return recommendations.join('');
+        }
+        
+        function setPeriod(days) {
+            currentPeriod = days;
+            renderEmployerStats();
+        }
+        
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    if (unread > 0) {
+                        badge.innerText = unread;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.innerText = '';
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        // Инициализация
+        renderEmployerStats();
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сообщения — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-layout {
+            display: flex;
+            gap: 24px;
+            min-height: 70vh;
+            flex-wrap: wrap;
+        }
+        .dialogs-panel {
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: var(--border-glass);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .dialogs-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+        .dialogs-header h3 {
+            color: #00F0FF;
+            font-size: 18px;
+        }
+        .dialogs-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        .dialog-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dialog-item:hover {
+            background: rgba(0,240,255,0.05);
+        }
+        .dialog-item.active {
+            background: rgba(0,240,255,0.1);
+            border-left: 3px solid #00F0FF;
+        }
+        .dialog-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00F0FF, #B900FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .dialog-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .dialog-name {
+            font-weight: bold;
+            color: #E0E7FF;
+            margin-bottom: 4px;
+        }
+        .dialog-last-msg {
+            font-size: 12px;
+            color: #8892B0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dialog-time {
+            font-size: 10px;
+            color: #8892B0;
+            flex-shrink: 0;
+        }
+        .unread-badge {
+            background: #FF007F;
+            color: white;
+            font-size: 10px;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .chat-panel {
+            flex: 3;
+            min-width: 300px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: var(--border-glass);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00F0FF, #B900FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        .chat-header-info h4 {
+            color: #E0E7FF;
+            margin-bottom: 2px;
+        }
+        .chat-header-info p {
+            font-size: 12px;
+            color: #8892B0;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 400px;
+            max-height: 500px;
+        }
+        
+       /* ===== МАКСИМАЛЬНО КОМПАКТНЫЕ ОБЛАКА ===== */
+.message {
+    display: flex;
+    max-width: 20%;
+    animation: messageSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.message-mine {
+    align-self: flex-end;
+}
+.message-other {
+    align-self: flex-start;
+}
+.message-bubble {
+    padding: 3px 10px; /* минимальные отступы */
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.25;
+    word-wrap: break-word;
+    max-width: 100%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.message-mine .message-bubble {
+    background: #00F0FF;
+    color: #0A0E27;
+    border-bottom-right-radius: 2px;
+}
+.message-other .message-bubble {
+    background: rgba(255, 255, 255, 0.06);
+    color: #E0E7FF;
+    border-bottom-left-radius: 2px;
+}
+.message-time {
+    font-size: 8px;
+    color: #8892B0;
+    margin-top: 0px;
+    padding: 0 4px;
+    opacity: 0.5;
+    display: inline-block;
+}
+.message-mine .message-time {
+    text-align: right;
+    display: block;
+}
+.message-other .message-time {
+    display: block;
+}
+.chat-messages {
+    gap: 2px;
+    padding: 10px 12px;
+}
+        
+        /* ===== ПЛАВНАЯ АНИМАЦИЯ ПОЯВЛЕНИЯ СООБЩЕНИЙ ===== */
+        @keyframes messageSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(15px) scale(0.95);
+            }
+            50% {
+                transform: translateY(-2px) scale(1.01);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Более плавная анимация */
+        @keyframes messageFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-mine {
+            animation: messageFadeIn 0.3s ease;
+        }
+        .message-other {
+            animation: messageFadeIn 0.3s ease;
+        }
+        
+        /* Легкое свечение при появлении */
+        .message-mine .message-bubble {
+            animation: glowPulse 0.5s ease;
+        }
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4); }
+            100% { box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        }
+        
+        /* Эффект "печатает" (пульсирующая точка) */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 18px;
+            align-self: flex-start;
+            margin-bottom: 4px;
+        }
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #8892B0;
+            animation: typingBounce 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        
+        .chat-input-area {
+            padding: 10px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .chat-input-area input {
+            flex: 1;
+            margin-bottom: 0;
+            padding: 10px 16px;
+            font-size: 14px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s;
+        }
+        .chat-input-area input:focus {
+            border-color: #00F0FF;
+            box-shadow: 0 0 15px rgba(0,240,255,0.15);
+        }
+        .chat-input-area .neon-btn {
+            flex-shrink: 0;
+            padding: 10px 22px;
+            font-size: 14px;
+            border-radius: 24px;
+            transition: all 0.3s;
+        }
+        .chat-input-area .neon-btn:hover {
+            transform: scale(1.05);
+        }
+        .chat-input-area .neon-btn:active {
+            transform: scale(0.95);
+        }
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #8892B0;
+            text-align: center;
+            padding: 40px;
+        }
+        .empty-chat p:first-child {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .no-dialogs {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8892B0;
+        }
+        .no-dialogs p:first-child {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .dialogs-list::-webkit-scrollbar,
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        .dialogs-list::-webkit-scrollbar-track,
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.03);
+            border-radius: 3px;
+        }
+        .dialogs-list::-webkit-scrollbar-thumb,
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #00F0FF;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-layout { flex-direction: column; }
+            .dialogs-panel { max-width: 100%; }
+            .message { max-width: 85%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container">
+        <h1 class="neon-title" style="font-size: 32px; margin-bottom: 24px;">💬 Сообщения</h1>
+        <div class="chat-layout">
+            <div class="dialogs-panel">
+                <div class="dialogs-header">
+                    <h3>📋 Диалоги</h3>
+                </div>
+                <div class="dialogs-list" id="dialogsList">
+                    <div class="no-dialogs"><p>💬</p><p>Загрузка диалогов...</p></div>
+                </div>
+            </div>
+            <div class="chat-panel" id="chatPanel">
+                <div class="empty-chat">
+                    <p>💭</p>
+                    <p>Выберите диалог, чтобы начать общение</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        
+        updateNavigation();
+        updateNotificationBadge();
+        
+        let currentDialogUser = null;
+        let messagesRefreshInterval = null;
+        let messageInput = null;
+        let sendBtn = null;
+        
+        function renderDialogs() {
+            const dialogs = getDialogsForCurrentUser();
+            const container = document.getElementById('dialogsList');
+            
+            const db = getDB();
+            const currentUserId = getCurrentUserId();
+            const myResponses = db.responses.filter(r => r.candidate_id === currentUserId);
+            
+            if (currentUserId) {
+                myResponses.forEach(resp => {
+                    const vacancy = db.vacancies.find(v => String(v.id) === String(resp.vacancy_id));
+                    if (vacancy) {
+                        const existingDialog = dialogs.find(d => d.user && d.user.id === vacancy.employer_id);
+                        if (!existingDialog) {
+                            const employer = db.users.find(u => u.id === vacancy.employer_id);
+                            if (employer) {
+                                dialogs.push({
+                                    user: employer,
+                                    lastMsg: null,
+                                    unreadCount: 0
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+            
+            if (currentUserId) {
+                const myVacancyIds = db.vacancies.filter(v => v.employer_id === currentUserId).map(v => v.id);
+                const responsesToMe = db.responses.filter(r => myVacancyIds.includes(r.vacancy_id));
+                responsesToMe.forEach(resp => {
+                    const existingDialog = dialogs.find(d => d.user && d.user.id === resp.candidate_id);
+                    if (!existingDialog) {
+                        const candidate = db.users.find(u => u.id === resp.candidate_id);
+                        if (candidate) {
+                            dialogs.push({
+                                user: candidate,
+                                lastMsg: null,
+                                unreadCount: 0
+                            });
+                        }
+                    }
+                });
+            }
+            
+            const uniqueDialogs = [];
+            const seenIds = new Set();
+            dialogs.forEach(d => {
+                if (d && d.user && !seenIds.has(d.user.id)) {
+                    seenIds.add(d.user.id);
+                    uniqueDialogs.push(d);
+                }
+            });
+            
+            uniqueDialogs.sort((a, b) => {
+                const timeA = a.lastMsg ? new Date(a.lastMsg.created_at) : new Date(0);
+                const timeB = b.lastMsg ? new Date(b.lastMsg.created_at) : new Date(0);
+                return timeB - timeA;
+            });
+            
+            if (uniqueDialogs.length === 0) {
+                container.innerHTML = `
+                    <div class="no-dialogs">
+                        <p>📭</p>
+                        <p>У вас пока нет диалогов</p>
+                        <p style="font-size:12px; margin-top:8px;">Откликнитесь на вакансию, чтобы начать общение</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = uniqueDialogs.map(d => {
+                const lastMsgText = d.lastMsg ? (d.lastMsg.text.length > 40 ? d.lastMsg.text.substring(0, 40) + '...' : d.lastMsg.text) : 'Нет сообщений';
+                const lastMsgTime = d.lastMsg ? getRelativeTime(d.lastMsg.created_at) : '';
+                const isActive = currentDialogUser && currentDialogUser.id === d.user.id;
+                const avatarEmoji = d.user.role === 'employer' ? '🏢' : '👨‍💻';
+                const unreadCount = d.unreadCount || 0;
+                
+                return `
+                    <div class="dialog-item ${isActive ? 'active' : ''}" data-user-id="${d.user.id}" data-user-name="${escapeHtml(d.user.name)}">
+                        <div class="dialog-avatar">${avatarEmoji}</div>
+                        <div class="dialog-info">
+                            <div class="dialog-name">${escapeHtml(d.user.name)}</div>
+                            <div class="dialog-last-msg">${escapeHtml(lastMsgText)}</div>
+                        </div>
+                        <div class="dialog-time">${lastMsgTime}</div>
+                        ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            document.querySelectorAll('.dialog-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const userId = el.dataset.userId;
+                    const db = getDB();
+                    const user = db.users.find(u => String(u.id) === String(userId));
+                    if (user) openChat(user);
+                });
+            });
+        }
+        
+        function openChat(user) {
+            currentDialogUser = user;
+            markMessagesAsRead(user.id);
+            renderDialogs();
+            renderChat();
+            updateNotificationBadge();
+        }
+        
+        function renderChat() {
+            const chatPanel = document.getElementById('chatPanel');
+            if (!currentDialogUser) {
+                chatPanel.innerHTML = `
+                    <div class="empty-chat">
+                        <p>💭</p>
+                        <p>Выберите диалог, чтобы начать общение</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const currentText = messageInput ? messageInput.value : '';
+            
+            const messages = getMessagesWithUser(currentDialogUser.id);
+            const avatarEmoji = currentDialogUser.role === 'employer' ? '🏢' : '👨‍💻';
+            const roleLabel = currentDialogUser.role === 'employer' ? 'Работодатель' : 'Соискатель';
+            
+            chatPanel.innerHTML = `
+                <div class="chat-header">
+                    <div class="chat-header-avatar">${avatarEmoji}</div>
+                    <div class="chat-header-info">
+                        <h4>${escapeHtml(currentDialogUser.name)}</h4>
+                        <p>${roleLabel}</p>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    ${messages.length === 0 ? `
+                        <div class="empty-chat" style="background:transparent; height:auto; padding:20px;">
+                            <p style="font-size:24px;">💬</p>
+                            <p>Нет сообщений. Напишите что-нибудь...</p>
+                        </div>
+                    ` : messages.map(m => {
+                        const isMine = m.from_id === getCurrentUserId();
+                        return `
+                            <div class="message ${isMine ? 'message-mine' : 'message-other'}">
+                                <div class="message-bubble">
+                                    ${escapeHtml(m.text)}
+                                </div>
+                                <div class="message-time">${getRelativeTime(m.created_at)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="messageInput" class="neon-input" placeholder="Введите сообщение..." autocomplete="off" style="flex:1;" value="${escapeHtml(currentText)}">
+                    <button id="sendBtn" class="neon-btn">📨 Отправить</button>
+                </div>
+            `;
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            if (messagesContainer) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            messageInput = document.getElementById('messageInput');
+            sendBtn = document.getElementById('sendBtn');
+            
+            if (messageInput) {
+                messageInput.focus();
+                messageInput.setSelectionRange(currentText.length, currentText.length);
+                
+                messageInput.onkeydown = function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessageHandler();
+                    }
+                };
+            }
+            
+            if (sendBtn) {
+                sendBtn.onclick = function() {
+                    sendMessageHandler();
+                };
+            }
+        }
+        
+        function sendMessageHandler() {
+            if (!messageInput) return;
+            const text = messageInput.value.trim();
+            if (!text || !currentDialogUser) return;
+            
+            if (sendMessage(currentDialogUser.id, text)) {
+                messageInput.value = '';
+                renderChat();
+                renderDialogs();
+                updateNotificationBadge();
+            }
+        }
+        
+        function refreshChat() {
+            if (currentDialogUser) {
+                markMessagesAsRead(currentDialogUser.id);
+                renderChat();
+                renderDialogs();
+                updateNotificationBadge();
+            } else {
+                renderDialogs();
+                updateNotificationBadge();
+            }
+        }
+        
+        function checkUrlParam() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user');
+            if (userId) {
+                const db = getDB();
+                const user = db.users.find(u => String(u.id) === String(userId));
+                if (user && user.id !== getCurrentUserId()) {
+                    setTimeout(() => openChat(user), 500);
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDialogs();
+            checkUrlParam();
+            messagesRefreshInterval = setInterval(refreshChat, 5000);
+        });
+        
+        window.addEventListener('beforeunload', function() {
+            if (messagesRefreshInterval) clearInterval(messagesRefreshInterval);
+        });
+        
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>

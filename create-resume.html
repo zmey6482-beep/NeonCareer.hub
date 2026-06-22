@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создать резюме — NeonCareer hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .progress-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #8892B0;
+        }
+        .progress-bar-container {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00F0FF, #B900FF);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .validation-hint {
+            font-size: 12px;
+            color: #FF007F;
+            margin-top: 4px;
+            display: none;
+        }
+        .validation-hint.visible {
+            display: block;
+        }
+        .field-error {
+            border-color: #FF007F !important;
+            box-shadow: 0 0 10px rgba(255,0,127,0.3) !important;
+        }
+        .success-field {
+            border-color: #00FF88 !important;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #0A0E27;
+            color: #00F0FF;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid #00F0FF;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <nav class="neon-nav">
+    <a href="index.html" class="logo">⚡ NeonCareer hub</a>
+    
+    <!-- Кнопка бургер -->
+    <button class="burger-btn" id="burgerBtn" aria-label="Меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <div class="nav-links">
+        <!-- Основные ссылки (видны всем) -->
+        <a href="index.html">Вакансии</a>
+        <a href="resumes.html">Резюме</a>
+        
+        <!-- Для авторизованных -->
+        <a href="profile.html" class="nav-auth desktop-only" style="display:none;">Профиль</a>
+        
+        <!-- Для соискателя -->
+        <a href="my-resumes.html" class="nav-candidate desktop-only" style="display:none;">Мои резюме</a>
+        <a href="quiz.html" class="nav-candidate desktop-only" style="display:none;">🎓 Тест</a>
+        
+        <!-- Для работодателя -->
+        <a href="employer-responses.html" class="nav-employer desktop-only" style="display:none;">Отклики</a>
+        <a href="employer-stats.html" class="nav-employer desktop-only" style="display:none;">📊 Статистика</a>
+        
+        <!-- Для всех авторизованных -->
+        <a href="chat.html" class="nav-auth desktop-only" style="display:none;">💬 Сообщения</a>
+        <a href="notifications.html" class="nav-auth desktop-only" style="display:none;">🔔 <span id="notifBadge"></span></a>
+        
+        <!-- Кнопки входа/выхода -->
+        <button onclick="logout()" class="neon-btn purple small nav-auth desktop-only" style="display:none;">Выйти</button>
+        <a href="login.html" class="nav-guest desktop-only">Войти</a>
+        <a href="register.html" class="nav-guest desktop-only">Регистрация</a>
+    </div>
+</nav>
+
+<!-- Оверлей -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Мобильное меню -->
+<div class="mobile-menu" id="mobileMenu">
+    <!-- Главные ссылки -->
+    <a href="index.html">🏠 Вакансии</a>
+    <a href="resumes.html">📄 Резюме</a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Для авторизованных -->
+    <div class="menu-title">👤 Профиль</div>
+    <a href="profile.html" class="nav-auth" style="display:none;">👤 Профиль</a>
+    
+    <!-- Для соискателя -->
+    <a href="my-resumes.html" class="nav-candidate" style="display:none;">📝 Мои резюме</a>
+    <a href="quiz.html" class="nav-candidate" style="display:none;">🎓 Тест</a>
+    
+    <!-- Для работодателя -->
+    <a href="employer-responses.html" class="nav-employer" style="display:none;">📬 Отклики</a>
+    <a href="employer-stats.html" class="nav-employer" style="display:none;">📊 Статистика</a>
+    
+    <!-- Для всех авторизованных -->
+    <a href="chat.html" class="nav-auth" style="display:none;">💬 Сообщения</a>
+    <a href="notifications.html" class="nav-auth" style="display:none;">🔔 Уведомления <span id="mobileNotifBadge"></span></a>
+    
+    <div class="menu-divider"></div>
+    
+    <!-- Кнопки входа/выхода -->
+    <button onclick="logout()" class="nav-auth" style="display:none; color:#FF007F;">🚪 Выйти</button>
+    <a href="login.html" class="nav-guest">🔑 Войти</a>
+    <a href="register.html" class="nav-guest">📝 Регистрация</a>
+</div>
+
+    <div class="container" style="max-width:800px;">
+        <div class="glass-card">
+            <h2 style="color:#00F0FF; font-size:28px;">📝 Создание резюме</h2>
+            <p style="color:#8892B0; margin-bottom:24px;">Заполните все разделы, чтобы выделиться среди кандидатов</p>
+
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>📊 Заполнение резюме</span>
+                    <span id="completionPercent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-fill" id="completionFill"></div>
+                </div>
+                <p style="font-size:12px; color:#8892B0; margin-top:8px;" id="completionHint">
+                    💡 Заполните больше полей, чтобы работодатели замечали ваше резюме
+                </p>
+            </div>
+
+            <div class="message-box" id="msgBox"></div>
+
+            <form id="resumeForm">
+                <div class="section-title">
+                    📋 Основная информация
+                    <span class="tooltip">❓<span class="tooltip-text">Обязательные поля отмечены звёздочкой (*)</span></span>
+                </div>
+                <input type="text" id="resTitle" class="neon-input" placeholder="* Название резюме (например: Senior Frontend Developer)" required>
+                <div class="validation-hint" id="titleHint">Укажите название резюме (минимум 5 символов)</div>
+                
+                <input type="text" id="resPosition" class="neon-input" placeholder="* Желаемая должность" required>
+                <div class="validation-hint" id="positionHint">Укажите желаемую должность (минимум 3 символа)</div>
+
+                <div class="input-row">
+                    <input type="number" id="resSalaryFrom" class="neon-input" placeholder="Зарплата от (₽)">
+                    <input type="number" id="resSalaryTo" class="neon-input" placeholder="Зарплата до (₽)">
+                </div>
+                <div class="input-row">
+                    <select id="resEmpType" class="neon-select">
+                        <option>Полный день</option>
+                        <option>Частичная занятость</option>
+                        <option>Проектная работа</option>
+                        <option>Удалённая работа</option>
+                        <option>Стажировка</option>
+                    </select>
+                    <select id="resSchedule" class="neon-select">
+                        <option>Полный день</option>
+                        <option>Гибкий график</option>
+                        <option>Сменный график</option>
+                    </select>
+                </div>
+
+                <input type="text" id="resCity" class="neon-input" placeholder="📍 Город проживания">
+                <input type="url" id="resPortfolio" class="neon-input" placeholder="🔗 Ссылка на портфолио (GitHub, Behance и т.д.)">
+
+                <div class="section-title">💡 Ключевые навыки <span style="color:#FF007F;">*</span></div>
+                <div class="skill-tags" id="skillsContainer"></div>
+                <div class="add-row">
+                    <input type="text" id="skillInput" class="neon-input" placeholder="Добавить навык (например: React)" style="margin-bottom:0;">
+                    <button type="button" class="neon-btn" onclick="addSkill()">+</button>
+                </div>
+                <div class="validation-hint" id="skillsHint">Добавьте хотя бы один навык</div>
+
+                <div class="section-title">🌐 Знание языков</div>
+                <div id="languagesContainer"></div>
+                <button type="button" class="neon-btn mt-2" onclick="addLanguage()">+ Добавить язык</button>
+
+                <div class="section-title">🎓 Образование</div>
+                <div id="educationContainer"></div>
+                <button type="button" class="neon-btn mt-2" onclick="addEducation()">+ Добавить образование</button>
+
+                <div class="section-title">💼 Опыт работы <span style="color:#FF007F;">*</span></div>
+                <div id="experienceContainer"></div>
+                <button type="button" class="neon-btn mt-2" onclick="addExperience()">+ Добавить место работы</button>
+                <div class="validation-hint" id="experienceHint">Добавьте хотя бы одно место работы</div>
+
+                <div class="section-title">✍️ О себе</div>
+                <textarea id="resAbout" class="neon-textarea" placeholder="Расскажите о себе, ваших достижениях и целях... (минимум 20 символов)"></textarea>
+                <div class="validation-hint" id="aboutHint">Расскажите немного о себе (минимум 20 символов)</div>
+
+                <button type="submit" class="neon-btn w-full mt-3" style="padding:18px; font-size:18px;">🚀 Опубликовать резюме</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        if (!requireRole('candidate')) throw new Error('Access denied');
+        updateNavigation();
+        updateNotificationBadge();
+
+        const formData = { skills: [], languages: [], education: [], experience: [] };
+
+        function validateTitle() {
+            const val = document.getElementById('resTitle').value.trim();
+            const isValid = val.length >= 5;
+            const hint = document.getElementById('titleHint');
+            const input = document.getElementById('resTitle');
+            if (!isValid) {
+                hint.classList.add('visible');
+                input.classList.add('field-error');
+                input.classList.remove('success-field');
+            } else {
+                hint.classList.remove('visible');
+                input.classList.remove('field-error');
+                input.classList.add('success-field');
+            }
+            return isValid;
+        }
+
+        function validatePosition() {
+            const val = document.getElementById('resPosition').value.trim();
+            const isValid = val.length >= 3;
+            const hint = document.getElementById('positionHint');
+            const input = document.getElementById('resPosition');
+            if (!isValid) {
+                hint.classList.add('visible');
+                input.classList.add('field-error');
+                input.classList.remove('success-field');
+            } else {
+                hint.classList.remove('visible');
+                input.classList.remove('field-error');
+                input.classList.add('success-field');
+            }
+            return isValid;
+        }
+
+        function validateSkills() {
+            const isValid = formData.skills.length > 0;
+            const hint = document.getElementById('skillsHint');
+            if (!isValid) hint.classList.add('visible');
+            else hint.classList.remove('visible');
+            return isValid;
+        }
+
+        function validateExperience() {
+            const isValid = formData.experience.length > 0;
+            const hint = document.getElementById('experienceHint');
+            if (!isValid) hint.classList.add('visible');
+            else hint.classList.remove('visible');
+            return isValid;
+        }
+
+        function calculateCompletion() {
+            let total = 0, filled = 0;
+            total += 2;
+            if (document.getElementById('resTitle').value.trim().length >= 5) filled++;
+            if (document.getElementById('resPosition').value.trim().length >= 3) filled++;
+            if (document.getElementById('resCity').value.trim()) { filled++; } total++;
+            if (document.getElementById('resAbout').value.trim().length >= 20) { filled++; } total++;
+            if (document.getElementById('resSalaryFrom').value || document.getElementById('resSalaryTo').value) { filled++; } total++;
+            if (document.getElementById('resPortfolio').value.trim()) { filled++; } total++;
+            total++; if (formData.skills.length > 0) filled++;
+            total++; if (formData.experience.length > 0) filled++;
+            total++; if (formData.languages.length > 0) filled++;
+            total++; if (formData.education.length > 0) filled++;
+            const percent = Math.min(100, Math.round((filled / total) * 100));
+            document.getElementById('completionPercent').innerText = percent + '%';
+            document.getElementById('completionFill').style.width = percent + '%';
+            let hintText = '';
+            if (percent < 30) hintText = '⚠️ Резюме почти пустое. Заполните основные разделы!';
+            else if (percent < 60) hintText = '📝 Хороший старт! Добавьте навыки, опыт и расскажите о себе.';
+            else if (percent < 90) hintText = '🎉 Отлично! Осталось добавить пару деталей для идеального резюме.';
+            else hintText = '🏆 Превосходно! Ваше резюме полностью готово к публикации.';
+            document.getElementById('completionHint').innerHTML = '💡 ' + hintText;
+            return percent;
+        }
+
+        function attachInputListeners() {
+            const inputs = ['resTitle', 'resPosition', 'resCity', 'resAbout', 'resSalaryFrom', 'resSalaryTo', 'resPortfolio'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    calculateCompletion();
+                    if (id === 'resTitle') validateTitle();
+                    if (id === 'resPosition') validatePosition();
+                });
+            });
+        }
+
+        function renderSkills() {
+            document.getElementById('skillsContainer').innerHTML = formData.skills.map((s, i) =>
+                `<span class="skill-tag">${escapeHtml(s)} <span class="remove-tag" onclick="removeSkill(${i})">×</span></span>`
+            ).join('');
+            validateSkills();
+            calculateCompletion();
+        }
+
+        window.addSkill = function() {
+            const inp = document.getElementById('skillInput');
+            const val = inp.value.trim();
+            if (val && !formData.skills.includes(val)) {
+                formData.skills.push(val);
+                inp.value = '';
+                renderSkills();
+                calculateCompletion();
+            }
+        };
+
+        window.removeSkill = function(i) {
+            formData.skills.splice(i, 1);
+            renderSkills();
+            calculateCompletion();
+        };
+
+        document.getElementById('skillInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addSkill(); }
+        });
+
+        function renderLanguages() {
+            document.getElementById('languagesContainer').innerHTML = formData.languages.map((l, i) => `
+                <div class="dynamic-block">
+                    <span class="remove-block" onclick="removeLanguage(${i})">×</span>
+                    <div class="input-row">
+                        <input class="neon-input" placeholder="Язык" value="${escapeHtml(l.name)}" onchange="formData.languages[${i}].name=this.value; calculateCompletion();">
+                        <select class="neon-select" onchange="formData.languages[${i}].level=this.value; calculateCompletion();">
+                            ${['A1','A2','B1','B2','C1','C2'].map(lvl => `<option ${l.level===lvl?'selected':''}>${lvl}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            `).join('');
+            calculateCompletion();
+        }
+
+        window.addLanguage = function() { 
+            formData.languages.push({ name: '', level: 'B1' });
+            renderLanguages(); 
+            calculateCompletion();
+        };
+        window.removeLanguage = function(i) { 
+            formData.languages.splice(i, 1);
+            renderLanguages(); 
+            calculateCompletion();
+        };
+
+        function renderEducation() {
+            document.getElementById('educationContainer').innerHTML = formData.education.map((e, i) => `
+                <div class="dynamic-block">
+                    <span class="remove-block" onclick="removeEducation(${i})">×</span>
+                    <input class="neon-input" placeholder="Учебное заведение" value="${escapeHtml(e.institution)}" onchange="formData.education[${i}].institution=this.value; calculateCompletion();">
+                    <div class="input-row">
+                        <input class="neon-input" placeholder="Специальность" value="${escapeHtml(e.specialty)}" onchange="formData.education[${i}].specialty=this.value; calculateCompletion();">
+                        <!-- ИСПРАВЛЕНО: год выпуска только цифры -->
+                        <input type="number" class="neon-input" placeholder="Год окончания" value="${escapeHtml(e.year)}" onchange="formData.education[${i}].year=this.value" min="1900" max="2099" step="1" calculateCompletion();">
+                    </div>
+                </div>
+            `).join('');
+            calculateCompletion();
+        }
+
+        window.addEducation = function() { 
+            formData.education.push({ institution: '', specialty: '', year: '' });
+            renderEducation(); 
+            calculateCompletion();
+        };
+        window.removeEducation = function(i) { 
+            formData.education.splice(i, 1);
+            renderEducation(); 
+            calculateCompletion();
+        };
+
+        function renderExperience() {
+            document.getElementById('experienceContainer').innerHTML = formData.experience.map((exp, i) => `
+                <div class="dynamic-block">
+                    <span class="remove-block" onclick="removeExperience(${i})">×</span>
+                    <input class="neon-input" placeholder="Компания" value="${escapeHtml(exp.company)}" onchange="formData.experience[${i}].company=this.value; validateExperience(); calculateCompletion();">
+                    <input class="neon-input" placeholder="Должность" value="${escapeHtml(exp.position)}" onchange="formData.experience[${i}].position=this.value; validateExperience(); calculateCompletion();">
+                    <div class="input-row">
+                        <input class="neon-input" placeholder="Начало (2020)" value="${escapeHtml(exp.start_date)}" onchange="formData.experience[${i}].start_date=this.value; calculateCompletion();">
+                        <input class="neon-input" placeholder="Конец (или «наст. время»)" value="${escapeHtml(exp.end_date)}" onchange="formData.experience[${i}].end_date=this.value; calculateCompletion();">
+                    </div>
+                    <textarea class="neon-textarea" placeholder="Обязанности и достижения" onchange="formData.experience[${i}].description=this.value; calculateCompletion();">${escapeHtml(exp.description)}</textarea>
+                </div>
+            `).join('');
+            validateExperience();
+            calculateCompletion();
+        }
+
+        window.addExperience = function() { 
+            formData.experience.push({ company: '', position: '', start_date: '', end_date: '', description: '' });
+            renderExperience(); 
+            calculateCompletion();
+        };
+        window.removeExperience = function(i) { 
+            formData.experience.splice(i, 1);
+            renderExperience(); 
+            calculateCompletion();
+        };
+
+        document.getElementById('resumeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateTitle()) {
+                showMessage('msgBox', '❌ Укажите название резюме (минимум 5 символов)', 'error');
+                document.getElementById('resTitle').focus();
+                return;
+            }
+            if (!validatePosition()) {
+                showMessage('msgBox', '❌ Укажите желаемую должность (минимум 3 символа)', 'error');
+                document.getElementById('resPosition').focus();
+                return;
+            }
+            if (!validateSkills()) {
+                showMessage('msgBox', '❌ Добавьте хотя бы один навык', 'error');
+                return;
+            }
+            if (!validateExperience()) {
+                showMessage('msgBox', '❌ Добавьте хотя бы одно место работы', 'error');
+                return;
+            }
+            
+            const db = getDB();
+            const currentUserId = getCurrentUserId();
+            
+            const newResume = {
+                id: generateId(),
+                candidate_id: currentUserId,
+                title: document.getElementById('resTitle').value.trim(),
+                desired_position: document.getElementById('resPosition').value.trim(),
+                salary_from: parseInt(document.getElementById('resSalaryFrom').value) || null,
+                salary_to: parseInt(document.getElementById('resSalaryTo').value) || null,
+                currency: '₽',
+                employment_type: document.getElementById('resEmpType').value,
+                work_schedule: document.getElementById('resSchedule').value,
+                city: document.getElementById('resCity').value.trim(),
+                about_me: document.getElementById('resAbout').value.trim(),
+                skills: formData.skills,
+                languages: formData.languages,
+                education: formData.education,
+                experience: formData.experience,
+                portfolio_url: document.getElementById('resPortfolio').value.trim(),
+                is_active: true,
+                views: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            db.resumes.push(newResume);
+            saveDB(db);
+            
+            if (typeof addNotification !== 'undefined') {
+                addNotification(currentUserId, '✅ Ваше резюме успешно опубликовано!', 'success');
+            }
+            
+            showMessage('msgBox', '✅ Резюме успешно создано!', 'success');
+            setTimeout(() => { window.location.href = 'my-resumes.html'; }, 1500);
+        });
+
+        function updateNotificationBadge() {
+            if (typeof getNotificationsForCurrentUser !== 'undefined') {
+                const notifs = getNotificationsForCurrentUser();
+                const unread = notifs.filter(n => !n.read).length;
+                const badge = document.getElementById('notifBadge');
+                if (badge) {
+                    badge.innerText = unread > 0 ? unread : '';
+                    badge.style.display = unread > 0 ? 'inline-block' : 'none';
+                }
+            }
+        }
+        
+        renderSkills();
+        renderLanguages();
+        renderEducation();
+        renderExperience();
+        attachInputListeners();
+        calculateCompletion();
+        setInterval(updateNotificationBadge, 5000);
+    </script>
+</body>
+</html>
